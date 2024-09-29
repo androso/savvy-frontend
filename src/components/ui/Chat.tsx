@@ -97,8 +97,8 @@ export default function AITutorChat() {
 							{suggestedTopics.map((topic, index) => (
 								<Button
 									key={index}
-									variant="outline"
-									className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full"
+									variant={"outline"}
+									className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
 									onClick={() => handleTopicClick(topic)}
 								>
 									{topic}
