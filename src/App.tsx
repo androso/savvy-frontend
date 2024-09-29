@@ -1,76 +1,58 @@
-import { useState } from "react";
-import { GoogleOAuthProvider, GoogleLogin, googleLogout, CredentialResponse } from "@react-oauth/google";
-import { jwtDecode} from "jwt-decode";
+import {
+	GoogleLogin,
+	googleLogout,
+	CredentialResponse,
+} from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { useUser } from "./lib/useUser";
 import "./App.css";
 import AITutorChat from "./components/ui/Chat";
 
-
 interface DecodedUser {
-  name: string;
-  email: string;
-  picture: string;
-  sub: string;
+	name: string;
+	email: string;
+	picture: string;
+	sub: string;
 }
 
-const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [user, setUser] = useState<DecodedUser | null>(null);
+	const { user, isLoading, saveUser, removeUser } = useUser();
 
-  const onSuccess = async (response: CredentialResponse) => {
-	if (response.credential) {
-	  const decoded: DecodedUser = jwtDecode(response.credential);
-	  console.log("Login Success: currentUser:", decoded);
-	  setUser(decoded);
-	  setIsLoggedIn(true);
+	const onSuccess = (response: CredentialResponse) => {
+		if (response.credential) {
+			const decoded: DecodedUser = jwtDecode(response.credential);
+			console.log("Login Success: currentUser:", decoded);
+			saveUser(decoded);
+		}
+	};
 
-	  await fetch("http://localhost:3000/api/save-user", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify({
-			google_id: decoded.sub,
-			email: decoded.email,
-			display_name: decoded.name,
-			profile_picture_url: decoded.picture,
-			last_login: new Date().toISOString()
-		})
-	  })
+	const onFailure = () => {
+		console.log("Login failed");
+	};
+
+	const handleLogout = () => {
+		googleLogout();
+		removeUser();
+		console.log("Logout made successfully");
+	};
+
+	if (isLoading) {
+		return <div>Loading...</div>;
 	}
-  };
 
-  const onFailure = () => {
-	console.log("Login failed");
-	setIsLoggedIn(false);
-  };
-
-  const handleLogout = () => {
-	googleLogout();
-	setIsLoggedIn(false);
-	setUser(null);
-	console.log("Logout made successfully");
-  };
-
-  return (
-	<GoogleOAuthProvider clientId={clientId}>
-	  <div>
-		{!isLoggedIn ? (
-		  <GoogleLogin
-			onSuccess={onSuccess}
-			onError={onFailure}
-		  />
-		) : (
-		  <>
-			<button onClick={handleLogout}>Logout</button>
-			<h1>Welcome, {user?.name}</h1>
-			<AITutorChat />
-		  </>
-		)}
-	  </div>
-	</GoogleOAuthProvider>
-  );
+	return (
+		<div>
+			{!user ? (
+				<GoogleLogin onSuccess={onSuccess} onError={onFailure} />
+			) : (
+				<>
+					<button onClick={handleLogout}>Logout</button>
+					<h1>Welcome, {user.name}</h1>
+					<AITutorChat />
+				</>
+			)}
+		</div>
+	);
 }
 
 export default App;
