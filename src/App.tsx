@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { useUser } from "./lib/useUser";
 import "./App.css";
 import AITutorChat from "./components/ui/Chat";
-import Login from "./components/ui/login";
+
 
 interface DecodedUser {
 	name: string;
@@ -13,6 +13,7 @@ interface DecodedUser {
 }
 
 function App() {
+	
 	const { user, isLoading, saveUser, logout } = useUser();
 
 	const onSuccess = (response: CredentialResponse) => {
@@ -34,21 +35,16 @@ function App() {
 
 	return (
 		<div>
-<<<<<<< HEAD
-			{!user ? (
-				<GoogleLogin onSuccess={onSuccess} onError={onFailure} />
-			) : (
-				<>
-					<button onClick={logout}>Logout</button>
-					<AITutorChat />
-				</>
-			)}
-=======
-      <AITutorChat />
-	  <Login />
->>>>>>> 41b9ebc (Login)
+		  {!user ? (
+			<GoogleLogin onSuccess={onSuccess} onError={onFailure} />
+		  ) : (
+			<>
+			  <button onClick={logout}>Logout</button>
+			  
+			  <AITutorChat />
+			</>
+		  )}
 		</div>
-	);
-}
-
+	  );
+	}	  
 export default App;
