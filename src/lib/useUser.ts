@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { googleLogout } from "@react-oauth/google";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
 interface DecodedUser {
@@ -36,6 +37,7 @@ const saveUser = async (user: DecodedUser) => {
 
 const removeUser = async () => {
 	Cookies.remove("user");
+    
 };
 
 export const useUser = () => {
@@ -58,10 +60,16 @@ export const useUser = () => {
 		},
 	});
 
+    const logout = () => {
+        googleLogout()
+        removeUserMutation.mutate()
+    }
+
 	return {
 		user,
 		isLoading,
 		saveUser: saveUserMutation.mutate,
 		removeUser: removeUserMutation.mutate,
+        logout
 	};
 };
