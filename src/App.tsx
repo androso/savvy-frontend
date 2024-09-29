@@ -9,6 +9,7 @@ interface DecodedUser {
   name: string;
   email: string;
   picture: string;
+  sub: string;
 }
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -17,12 +18,26 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<DecodedUser | null>(null);
 
-  const onSuccess = (response: CredentialResponse) => {
+  const onSuccess = async (response: CredentialResponse) => {
 	if (response.credential) {
 	  const decoded: DecodedUser = jwtDecode(response.credential);
 	  console.log("Login Success: currentUser:", decoded);
 	  setUser(decoded);
 	  setIsLoggedIn(true);
+
+	  await fetch("http://localhost:3000/api/save-user", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			google_id: decoded.sub,
+			email: decoded.email,
+			display_name: decoded.name,
+			profile_picture_url: decoded.picture,
+			last_login: new Date().toISOString()
+		})
+	  })
 	}
   };
 
