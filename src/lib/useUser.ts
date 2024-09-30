@@ -1,5 +1,5 @@
 import { googleLogout } from "@react-oauth/google";
-import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
 interface DecodedUser {

@@ -1,48 +1,6 @@
-
+// GoogleLoginButton.tsx
 import styled from "styled-components";
-
-const Button = () => {
-  return (
-    <StyledWrapper>
-      <button className="styled-button">
-        Register Now
-        <div className="inner-button">
-          <svg
-            id="Arrow"
-            viewBox="0 0 32 32"
-            xmlns="http://www.w3.org/2000/svg"
-            height="30px"
-            width="30px"
-            className="icon"
-          >
-            <defs>
-              <linearGradient
-                y2="100%"
-                x2="100%"
-                y1="0%"
-                x1="0%"
-                id="iconGradient"
-              >
-                <stop
-                  style={{ stopColor: "#FFFFFF", stopOpacity: "1" }}
-                  offset="0%"
-                />
-                <stop
-                  style={{ stopColor: "#AAAAAA", stopOpacity: "1" }}
-                  offset="100%"
-                />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#iconGradient)"
-              d="M4 15a1 1 0 0 0 1 1h19.586l-4.292 4.292a1 1 0 0 0 1.414 1.414l6-6a.99.99 0 0 0 .292-.702V15c0-.13-.026-.26-.078-.382a.99.99 0 0 0-.216-.324l-6-6a1 1 0 0 0-1.414 1.414L24.586 14H5a1 1 0 0 0-1 1z"
-            />
-          </svg>
-        </div>
-      </button>
-    </StyledWrapper>
-  );
-};
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 
 const StyledWrapper = styled.div`
   .styled-button {
@@ -81,7 +39,7 @@ const StyledWrapper = styled.div`
     box-shadow: 0 1px 2px rgba(0, 0, 0, 1), 0 5px 10px rgba(0, 0, 0, 0.4);
   }
 
-  .styled-button .inner-button {
+  .inner-button {
     position: relative; /* Ensure relative positioning for pseudo-element */
     display: flex;
     align-items: center;
@@ -96,7 +54,7 @@ const StyledWrapper = styled.div`
     transition: all 0.2s ease;
   }
 
-  .styled-button .inner-button::before {
+  .inner-button::before {
     content: "";
     position: absolute;
     top: -2px;
@@ -110,19 +68,55 @@ const StyledWrapper = styled.div`
     opacity: 1;
   }
 
-  .styled-button .inner-button .icon {
+  .icon {
     filter: drop-shadow(0 10px 20px rgba(26, 25, 25, 0.9))
       drop-shadow(0 0 4px rgba(0, 0, 0, 1));
     transition: all 0.4s ease-in-out;
   }
 
-  .styled-button .inner-button .icon:hover {
+  .icon:hover {
     filter: drop-shadow(0 10px 20px rgba(50, 50, 50, 1))
       drop-shadow(0 0 20px rgba(2, 2, 2, 1));
     transform: rotate(-35deg);
   }
 `;
 
+const GoogleLoginButton: React.FC<{ onSuccess: (response: CredentialResponse) => void, onError: () => void }> = ({ onSuccess, onError }) => {
+  const handleLoginSuccess = (response: CredentialResponse) => {
+    if (response.credential) {
+      onSuccess(response);
+    }
+  };
 
+  const handleLoginFailure = () => {
+    onError();
+  };
 
-export default Button;
+  return (
+    <StyledWrapper>
+      <GoogleLogin
+        onSuccess={handleLoginSuccess}
+        onError={handleLoginFailure}
+        prompt="select_account" // optional: customize Google Login prompt
+      >
+        <div className="styled-button" onClick={(e) => e.preventDefault()}>
+          <span>Login with Google</span>
+          <div className="inner-button">
+            <svg
+              id="GoogleIcon"
+              viewBox="0 0 32 32"
+              xmlns="http://www.w3.org/2000/svg"
+              height="30px"
+              width="30px"
+              className="icon"
+            >
+              <path d="M16 3c1.547 0 2.915.3 4.154.844l-.884 1.533A13.354 13.354 0 0 0 16 4c-6.706 0-12.083 5.377-12.083 12.083 0 6.706 5.377 12.083 12.083 12.083 6.147 0 11.136-4.727 11.136-11.136 0-.516-.037-1.021-.115-1.507h-10.23V14h5.65c-.366 2.154-2.426 4-5.653 4-3.254 0-5.909-2.644-5.909-5.912 0-3.267 2.658-5.912 5.909-5.912z" />
+            </svg>
+          </div>
+        </div>
+      </GoogleLogin>
+    </StyledWrapper>
+  );
+};
+
+export default GoogleLoginButton;
