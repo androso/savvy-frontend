@@ -4,7 +4,7 @@ import { useUser } from "./lib/useUser";
 import "./App.css";
 import { useCourses } from "./lib/useCourses";
 import { Button } from "./components/ui/button";
-import BottomNavigation from "./components/ui/NavigationBar";
+import NavigationBar from "./components/ui/NavigationBar";
 
 export interface DecodedUser {
 	name: string;
@@ -71,7 +71,7 @@ function App() {
 							</p>
 						</div>
 					</div>
-					<BottomNavigation />
+					<NavigationBar />
 					<button onClick={logout}>Logout</button>
 
 					{/* <AITutorChat /> */}
