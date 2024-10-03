@@ -5,22 +5,10 @@ import "./App.css";
 import { useCourses } from "./lib/useCourses";
 import { Button } from "./components/ui/button";
 import NavigationBar from "./components/ui/NavigationBar";
-
-export interface DecodedUser {
-	name: string;
-	email: string;
-	picture: string;
-	sub: string;
-	user_id: string;
-}
-interface Course {
-	course_id: string;
-	course_name: string;
-	user_id: string;
-}
+import { Course, DecodedUser } from "./types/types";
 
 function App() {
-	const { user, isLoading, saveUser, logout } = useUser();
+	const { user, saveUser, logout, isLoading } = useUser();
 	const { data: courses } = useCourses(user?.user_id || "");
 
 	const onSuccess = (response: CredentialResponse) => {
