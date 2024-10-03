@@ -62,7 +62,6 @@ function App() {
 					<NavigationBar />
 					<button onClick={logout}>Logout</button>
 
-					{/* <AITutorChat /> */}
 				</>
 			)}
 		</div>
