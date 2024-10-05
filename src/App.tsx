@@ -5,7 +5,7 @@ import "./App.css";
 import { useCourses } from "./lib/useCourses";
 import NavigationBar from "./components/ui/NavigationBar";
 import { DecodedUser } from "./types/types";
-import CoursesList from "./components/CoursesList";
+import Courses from "./components/CoursesList";
 
 function App() {
 	const { user, saveUser, logout, isLoading } = useUser();
@@ -45,7 +45,7 @@ function App() {
 							</h1>
 
 							{/* list the courses this user has created */}
-							<CoursesList
+							<Courses
 								courses={courses}
 								createCourse={createCourse}
 								deleteCourse={deleteCourse}

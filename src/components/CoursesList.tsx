@@ -25,7 +25,7 @@ interface CoursesListProps {
 	deleteCourse: (courseId: string) => void;
 }
 
-const CoursesList: React.FC<CoursesListProps> = ({ courses, createCourse }) => {
+const Courses: React.FC<CoursesListProps> = ({ courses, createCourse }) => {
 	const [courseName, setCourseName] = React.useState("");
 	const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 	const [description, setDescription] = React.useState("");
@@ -78,7 +78,7 @@ const CoursesList: React.FC<CoursesListProps> = ({ courses, createCourse }) => {
 							</div>
 						</div>
 						<DialogFooter>
-							<Button type="submit">Save</Button>
+							<Button type="submit">Guardar</Button>
 						</DialogFooter>
 					</form>
 				</DialogContent>
@@ -102,4 +102,4 @@ const CoursesList: React.FC<CoursesListProps> = ({ courses, createCourse }) => {
 	);
 };
 
-export default CoursesList;
+export default Courses;
