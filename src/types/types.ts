@@ -11,4 +11,3 @@ export interface Course {
 	course_name: string;
 	user_id: string;
 }
-
