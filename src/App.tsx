@@ -45,11 +45,13 @@ function App() {
 							</h1>
 
 							{/* list the courses this user has created */}
-							<Courses
-								courses={courses}
-								createCourse={createCourse}
-								deleteCourse={deleteCourse}
-							/>
+							<div className="max-w-2xl mx-auto">
+								<Courses
+									courses={courses}
+									createCourse={createCourse}
+									deleteCourse={deleteCourse}
+								/>
+							</div>
 						</div>
 					</div>
 					<NavigationBar />
@@ -59,7 +61,5 @@ function App() {
 		</div>
 	);
 }
-
-
 
 export default App;
