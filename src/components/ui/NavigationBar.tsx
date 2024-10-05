@@ -4,8 +4,8 @@ import { NavLink } from "react-router-dom";
 
 export default function NavigationBar() {
 	return (
-		<nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-4">
-			<div className="flex justify-around">
+		<nav className="absolute bottom-0 left-0 right-0 bg-background border-t border-border py-4  ">
+			<div className="flex justify-around max-w-2xl mx-auto">
 				<NavLink
 					to="/"
 					className={({ isActive }) =>

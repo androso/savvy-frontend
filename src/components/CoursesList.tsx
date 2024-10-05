@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Course } from "@/types/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ const Courses: React.FC<CoursesListProps> = ({
 	const [courseToDelete, setCourseToDelete] = React.useState<string | null>(
 		null
 	);
+	const navigate = useNavigate();
 
 	const handleCreateCourse = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -60,6 +62,10 @@ const Courses: React.FC<CoursesListProps> = ({
 				console.error(e);
 			}
 		}
+	};
+
+	const handleCourseClick = (course: Course) => {
+		navigate("/tutor", { state: { course } });
 	};
 
 	return (
@@ -149,6 +155,7 @@ const Courses: React.FC<CoursesListProps> = ({
 							<Button
 								variant="outline"
 								className="w-full py-6 text-lg font-medium bg-card hover:bg-accent"
+								onClick={() => handleCourseClick(course)}
 							>
 								{course.course_name}
 							</Button>

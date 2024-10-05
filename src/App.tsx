@@ -34,7 +34,7 @@ function App() {
 			{!user ? (
 				<GoogleLogin onSuccess={onSuccess} onError={onFailure} />
 			) : (
-				<>
+				<div className="relative">
 					<div className="min-h-screen bg-background text-foreground p-6 flex flex-col">
 						<div className="flex-grow">
 							<div className="flex justify-center mb-4">
@@ -54,9 +54,8 @@ function App() {
 							</div>
 						</div>
 					</div>
-					<NavigationBar />
-					<button onClick={logout}>Logout</button>
-				</>
+					{/* <button onClick={logout}>Logout</button> */}
+				</div>
 			)}
 		</div>
 	);

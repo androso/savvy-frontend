@@ -1,29 +1,28 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { StarIcon, PaperclipIcon, ArrowUpIcon } from "lucide-react";
+import NavigationBar from "./NavigationBar";
 
 export default function AITutorChat() {
+	const location = useLocation();
+	const course = location.state?.course;
 	const [messages, setMessages] = useState([
 		{
 			role: "assistant",
-			content:
-				"I'll help you understand anything!\n\nEnter an exam question, a homework problem, or anything you don't understand",
+			content: `Let's discuss ${course.course_name}. What would you like to know about it?`,
 		},
 	]);
 	const [input, setInput] = useState("");
 
-  // TODO: we should generate this list based on the subject under we stated the chat
 	const suggestedTopics = [
-		"Cognitive-behavioral therapy techniques",
-		"Humanistic vs. psychodynamic approaches",
-		"Mental health stigma reduction strategies",
-		"Self-care practices for therapists",
-		"Attachment theory and adult relationships",
-		"Abnormal psychology case studies",
-		"Cultural competence in psychotherapy",
-		"Couples therapy models and techniques",
+		`Details about ${course.course_name}`,
+		`More about ${course.description}`,
+		"General overview",
+		"Key concepts",
+		"Common questions",
 	];
 
 	const handleSendMessage = () => {
@@ -69,11 +68,11 @@ export default function AITutorChat() {
 	};
 
 	return (
-		<div className="flex flex-col h-screen bg-gray-100">
-			<header className="bg-white shadow-sm py-4 px-6">
-				<h1 className="text-xl font-semibold text-center">AI Tutor</h1>
+		<div className="flex flex-col h-full bg-gray-100  items-center overflow-y-scroll ">
+			<header className="bg-white shadow-sm py-4 px-6 w-full">
+				<h1 className="text-xl font-semibold text-center ">AI Tutor</h1>
 			</header>
-			<div className="flex-1 overflow-auto p-6">
+			<div className="flex-1 overflow-auto p-6 max-w-2xl mx-auto ">
 				{messages.map((message, index) => (
 					<Card
 						key={index}
@@ -83,7 +82,7 @@ export default function AITutorChat() {
 					>
 						{message.role === "assistant" && (
 							<div className="flex items-center mb-2">
-								<StarIcon className="w-6 h-6 text-yellow-400 mr-2" />
+								<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
 								<span className="font-semibold">Gizmo</span>
 							</div>
 						)}
@@ -108,7 +107,7 @@ export default function AITutorChat() {
 					</div>
 				)}
 			</div>
-			<div className="bg-white p-4 shadow-md">
+			<div className="sticky bottom-0 bg-white p-4 shadow-md w-full max-w-2xl mx-auto mt-10">
 				<div className="flex items-center">
 					<label htmlFor="file-upload" className="mr-2">
 						<Button
