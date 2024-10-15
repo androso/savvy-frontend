@@ -10,17 +10,17 @@ import { jwtDecode } from 'jwt-decode';
 const Login: React.FC = () => {
     const handleLoginSuccess = (response: any) => {
         console.log('Login Success:', response);
-        // Handle successful login here
+        
     };
 
     const handleLoginFailure = (response: any) => {
         console.log('Login Failed:', response);
-        // Handle failed login here
+       
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-white relative overflow-hidden">
-            {/* Background decorative elements */}
+         
             <div className="absolute top-0 left-0 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-pink-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>

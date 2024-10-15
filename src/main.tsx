@@ -8,6 +8,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AITutorChat from "./components/ui/Chat.tsx";
 import NavigationBar from "./components/ui/NavigationBar.tsx";
 import Login from "./components/ui/Login.tsx";
+import Review from "./components/ui/Review.tsx";
+import Notes from "./components/ui/Notes.tsx";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const queryClient = new QueryClient();
