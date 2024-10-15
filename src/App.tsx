@@ -3,13 +3,12 @@ import { jwtDecode } from "jwt-decode";
 import { useUser } from "./lib/useUser";
 import "./App.css";
 import { useCourses } from "./lib/useCourses";
-import NavigationBar from "./components/ui/NavigationBar";
 import { DecodedUser } from "./types/types";
 import Courses from "./components/CoursesList";
 
 
 function App() {
-	const { user, saveUser, logout, isLoading } = useUser();
+	const { user, saveUser, isLoading } = useUser();
 	const { courses, createCourse, deleteCourse } = useCourses(
 		user?.user_id || ""
 	);
