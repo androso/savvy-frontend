@@ -7,7 +7,7 @@ import "./index.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AITutorChat from "./components/ui/Chat.tsx";
+import TutorChat from "./components/ui/TutorChat.tsx";
 import NavigationBar from "./components/ui/NavigationBar.tsx";
 import Login from "./components/ui/Login.tsx";
 
@@ -20,11 +20,11 @@ createRoot(document.getElementById("root")!).render(
 		<GoogleOAuthProvider clientId={clientId}>
 			<QueryClientProvider client={queryClient}>
 				<BrowserRouter>
-					<div className="min-h-screen">
-						<div className="calc(100vh-69px)]">
+					<div className="">
+						<div className="h-[calc(100vh-69px)]">
 							<Routes>
 								<Route path="/" element={<App />} />
-								<Route path="/tutor" element={<AITutorChat />} />
+								<Route path="/tutor" element={<TutorChat />} />
 								<Route path="/review" element={<Review />} />
 								<Route path="/notes" element={<Notes />} />
 								<Route path="/login" element={<Login />} />
