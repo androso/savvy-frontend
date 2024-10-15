@@ -46,6 +46,34 @@ export const useUser = () => {
 		queryKey: ["user"],
 		queryFn: fetchUser,
 	});
+	const navigate = useNavigate()
+
+	useEffect(() => {
+		if (!isLoading && !user) {
+			navigate('/login')
+		}
+	}, [isLoading, user, navigate])
+
+	const saveUser = async (user: DecodedUser) => {
+		const response = await axios.post("/api/save-user", {
+			google_id: user.sub,
+			email: user.email,
+			display_name: user.name,
+			profile_picture_url: user.picture,
+			last_login: new Date().toISOString(),
+		});
+
+		const userId = response.data.data.user_id;
+		user.user_id = userId;
+
+		Cookies.set("user", JSON.stringify(user), {
+			secure: true,
+			sameSite: "strict",
+			expires: 7,
+		});
+		queryClient.setQueryData(["user"], user);
+	};
+
 	const saveUserMutation = useMutation({
 		mutationFn: saveUser,
 		onSuccess: () => {
