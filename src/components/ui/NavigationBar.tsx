@@ -36,6 +36,20 @@ export default function NavigationBar() {
 						<Book className="h-6 w-6" />
 					</Button>
 				</NavLink>
+				<NavLink
+					to="/login"
+					className={({ isActive }) =>
+						`hover:text-foreground ${isActive ? "" : "text-muted-foreground"}`
+					}
+					onClick={() => {
+						
+						console.log("Logging out...");
+					}}
+				>
+					<Button variant="ghost" size="icon">
+						<span className="h-6 w-6">Log Out</span>
+					</Button>
+				</NavLink>
 			</div>
 		</nav>
 	);

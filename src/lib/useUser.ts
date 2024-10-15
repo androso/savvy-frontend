@@ -25,7 +25,7 @@ export const useUser = () => {
 
 	useEffect(() => {
 		if (!isLoading && !user) {
-			navigate('/signin')
+			navigate('/login')
 		}
 	}, [isLoading, user, navigate])
 
