@@ -11,6 +11,7 @@ import AITutorChat from "./components/ui/Chat.tsx";
 import NavigationBar from "./components/ui/NavigationBar.tsx";
 import Login from "./components/ui/Login.tsx";
 
+
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const queryClient = new QueryClient();
 
@@ -27,8 +28,10 @@ createRoot(document.getElementById("root")!).render(
 								<Route path="/review" element={<Review />} />
 								<Route path="/notes" element={<Notes />} />
 								<Route path="/login" element={<Login />} />
+
 								
 							</Routes>
+							
 						</div>
 						<NavigationBar />
 					</div>

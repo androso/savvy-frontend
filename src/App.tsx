@@ -7,6 +7,7 @@ import NavigationBar from "./components/ui/NavigationBar";
 import { DecodedUser } from "./types/types";
 import Courses from "./components/CoursesList";
 
+
 function App() {
 	const { user, saveUser, logout, isLoading } = useUser();
 	const { courses, createCourse, deleteCourse } = useCourses(
