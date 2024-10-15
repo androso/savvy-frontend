@@ -4,7 +4,7 @@ import HappyMan from '../../img/HappyMan.png';
 import { useUser } from '@/lib/useUser';
 import { CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import GoogleButton from './GoogleButton'
+
 
 
 const Login: React.FC = () => {
@@ -98,7 +98,7 @@ const Login: React.FC = () => {
                             </div>
                 
                             {<ButonLogin />}
-                            <GoogleButton onSuccess={onSuccess} onError={onFailure} />
+                            
 
                            
                             
