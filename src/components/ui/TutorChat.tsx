@@ -3,27 +3,24 @@ import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { StarIcon, PaperclipIcon, ArrowUpIcon } from "lucide-react";
-import NavigationBar from "./NavigationBar";
+import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
+import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
+import { Course } from "@/types/types";
 
-export default function AITutorChat() {
+// ! TODO: Show list of suggested topics
+// ! TODO: Generate list of suggested topics by making a call to openai
+
+export default function TutorChat() {
 	const location = useLocation();
-	const course = location.state?.course;
+	const course: Course = location.state?.course;
 	const [messages, setMessages] = useState([
 		{
 			role: "assistant",
-			content: `Let's discuss ${course.course_name}. What would you like to know about it?`,
+			content: `Hablemos sobre ${course.course_name}. ¿Qué te gustaría saber al respecto?`,
 		},
 	]);
 	const [input, setInput] = useState("");
-
-	const suggestedTopics = [
-		`Details about ${course.course_name}`,
-		`More about ${course.description}`,
-		"General overview",
-		"Key concepts",
-		"Common questions",
-	];
+	const { suggestedTopics } = useSuggestedTopics(course.course_id);
 
 	const handleSendMessage = () => {
 		if (input.trim()) {
@@ -68,46 +65,49 @@ export default function AITutorChat() {
 	};
 
 	return (
-		<div className="flex flex-col h-full bg-gray-100  items-center overflow-y-scroll ">
-			<header className="bg-white shadow-sm py-4 px-6 w-full">
+		<div className="flex flex-col h-full bg-gray-100 items-center ">
+			{/* <header className="bg-white shadow-sm py-4 px-6 w-full">
 				<h1 className="text-xl font-semibold text-center ">AI Tutor</h1>
-			</header>
-			<div className="flex-1 overflow-auto p-6 max-w-2xl mx-auto ">
-				{messages.map((message, index) => (
-					<Card
-						key={index}
-						className={`mb-4 p-4 ${
-							message.role === "assistant" ? "bg-white" : "bg-blue-100"
-						}`}
-					>
-						{message.role === "assistant" && (
-							<div className="flex items-center mb-2">
-								<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
-								<span className="font-semibold">Gizmo</span>
+			</header> */}
+			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
+				<div className="max-w-2xl mx-auto pb-10">
+					{messages.map((message, index) => (
+						<Card
+							key={index}
+							className={`mb-4 p-4 ${
+								message.role === "assistant" ? "bg-white" : "bg-blue-100"
+							}`}
+						>
+							{message.role === "assistant" && (
+								<div className="flex items-center mb-2">
+									<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
+									<span className="font-semibold">Gizmo</span>
+								</div>
+							)}
+							<p className="whitespace-pre-wrap">{message.content}</p>
+						</Card>
+					))}
+					{messages.length === 1 && (
+						<div className="mt-6">
+							<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
+							<div className="flex flex-wrap gap-3">
+								{suggestedTopics &&
+									suggestedTopics?.map((topic, index) => (
+										<Button
+											key={index}
+											variant={"outline"}
+											className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
+											onClick={() => handleTopicClick(topic)}
+										>
+											{topic}
+										</Button>
+									))}
 							</div>
-						)}
-						<p className="whitespace-pre-wrap">{message.content}</p>
-					</Card>
-				))}
-				{messages.length === 1 && (
-					<div className="mt-6">
-						<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
-						<div className="flex flex-wrap gap-3">
-							{suggestedTopics.map((topic, index) => (
-								<Button
-									key={index}
-									variant={"outline"}
-									className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
-									onClick={() => handleTopicClick(topic)}
-								>
-									{topic}
-								</Button>
-							))}
 						</div>
-					</div>
-				)}
+					)}
+				</div>
 			</div>
-			<div className="sticky bottom-0 bg-white p-4 shadow-md w-full max-w-2xl mx-auto mt-10">
+			<div className="fixed bottom-[69px] bg-white  p-4 shadow-md w-full max-w-2xl mx-auto ">
 				<div className="flex items-center">
 					<label htmlFor="file-upload" className="mr-2">
 						<Button
