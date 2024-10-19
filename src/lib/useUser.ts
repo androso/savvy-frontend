@@ -30,7 +30,7 @@ export const useUser = () => {
 	}, [isLoading, user, navigate])
 
 	const saveUser = async (user: DecodedUser) => {
-		const response = await axios.post("/api/save-user", {
+		const response = await axios.post("/api/login", {
 			google_id: user.sub,
 			email: user.email,
 			display_name: user.name,
