@@ -21,17 +21,14 @@ createRoot(document.getElementById("root")!).render(
 			<QueryClientProvider client={queryClient}>
 				<BrowserRouter>
 					<div className="min-h-screen">
-						<div className="h-[calc(100vh-69px)]">
+						<div className="calc(100vh-69px)]">
 							<Routes>
 								<Route path="/" element={<App />} />
 								<Route path="/tutor" element={<AITutorChat />} />
 								<Route path="/review" element={<Review />} />
 								<Route path="/notes" element={<Notes />} />
 								<Route path="/login" element={<Login />} />
-
-								
 							</Routes>
-							
 						</div>
 						<NavigationBar />
 					</div>
