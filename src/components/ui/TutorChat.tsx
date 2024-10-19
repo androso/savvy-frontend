@@ -7,9 +7,6 @@ import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 
-// ! TODO: Show list of suggested topics
-// ! TODO: Generate list of suggested topics by making a call to openai
-
 export default function TutorChat() {
 	const location = useLocation();
 	const course: Course = location.state?.course;
@@ -21,7 +18,6 @@ export default function TutorChat() {
 	]);
 	const [input, setInput] = useState("");
 	const { suggestedTopics } = useSuggestedTopics(course.course_id);
-
 	const handleSendMessage = () => {
 		if (input.trim()) {
 			setMessages([...messages, { role: "user", content: input }]);
