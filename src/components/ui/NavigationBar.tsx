@@ -1,8 +1,11 @@
 import { Book, Clipboard, User } from "lucide-react";
 import { Button } from "./button";
 import { NavLink } from "react-router-dom";
+import { useUser } from "@/lib/useUser";
 
 export default function NavigationBar() {
+	const { logout } = useUser()
+
 	return (
 		<nav className="absolute bottom-0 left-0 right-0 bg-background border-t border-border py-4  ">
 			<div className="flex justify-around max-w-2xl mx-auto">
@@ -34,6 +37,20 @@ export default function NavigationBar() {
 				>
 					<Button variant="ghost" size="icon">
 						<Book className="h-6 w-6" />
+					</Button>
+				</NavLink>
+				<NavLink
+					to="/login"
+					className={({ isActive }) =>
+						`hover:text-foreground ${isActive ? "" : "text-muted-foreground"}`
+					}
+					onClick={() => {
+						
+						console.log("Logging out...");
+					}}
+				>
+					<Button variant="ghost" size="icon" onClick={logout}>
+						<span className="h-6 w-6">Log Out</span>
 					</Button>
 				</NavLink>
 			</div>
