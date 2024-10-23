@@ -1,4 +1,4 @@
-import { DecodedUser} from "@/types/types";
+import { DecodedUser } from "@/types/types";
 import { googleLogout } from "@react-oauth/google";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Cookies from "js-cookie";
@@ -21,13 +21,13 @@ export const useUser = () => {
 		queryKey: ["user"],
 		queryFn: fetchUser,
 	});
-	const navigate = useNavigate()
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (!isLoading && !user) {
-			navigate('/login')
+			navigate("/login");
 		}
-	}, [isLoading, user, navigate])
+	}, [isLoading, user, navigate]);
 
 	const saveUser = async (user: DecodedUser) => {
 		const response = await axios.post("/api/login", {
