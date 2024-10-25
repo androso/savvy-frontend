@@ -7,6 +7,16 @@ import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 
+// ! TODO: Add different types of messages from the tutor
+// ! TEXT: average response like "ok, let's talk about that" or "okay, let's try a new question"
+// ! STEPS: a card with a header and body, in the header it's introductory text by the ai
+// ! and in the body it's a list of steps to follow
+// ! STEP: a card with a header and body, in the header it's the step number and title and in the body it's the step text
+// ! should have the important concepts / words in bold
+// ! FLASHCARD: in the header should go the question
+// ! in the body should go options to "reveal", "save flaschard to library", "discard"
+// ! discard a flashcard should remove the flashcard from the chat
+
 function ListMessage({
 	headerText,
 	steps,
@@ -14,7 +24,6 @@ function ListMessage({
 	headerText: string;
 	steps: Step[];
 }) {
-
 	return (
 		<Card className="mb-4 p-4 bg-white">
 			<div className="flex items-center mb-2">
@@ -38,6 +47,34 @@ function ListMessage({
 		</Card>
 	);
 }
+
+function NormalTutorMessage({
+	key,
+	role,
+	content,
+}: {
+	key: number;
+	role: string;
+	content: string;
+}) {
+	return (
+		<Card
+			key={key}
+			className={`mb-4 p-4 ${
+				role === "assistant" ? "bg-white" : "bg-blue-100"
+			}`}
+		>
+			{role === "assistant" && (
+				<div className="flex items-center mb-2">
+					<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
+					<span className="font-semibold">Gizmo</span>
+				</div>
+			)}
+			<p className="whitespace-pre-wrap">{content}</p>
+		</Card>
+	);
+}
+
 interface Step {
 	order: number;
 	title: string;
@@ -71,7 +108,14 @@ interface ConceptTutorMessage extends BaseTutorMessage {
 export default function TutorChat() {
 	const location = useLocation();
 	const course: Course = location.state?.course;
-	const [messages, setMessages] = useState<(BaseTutorMessage | ConceptTutorMessage | ListTutorMessage | NormalTutorMessage)[]>([
+	const [messages, setMessages] = useState<
+		(
+			| BaseTutorMessage
+			| ConceptTutorMessage
+			| ListTutorMessage
+			| NormalTutorMessage
+		)[]
+	>([
 		{
 			role: "assistant",
 			type: "normal",
@@ -83,7 +127,10 @@ export default function TutorChat() {
 	const { suggestedTopics } = useSuggestedTopics(course.course_id);
 	const handleSendMessage = () => {
 		if (input.trim()) {
-			setMessages([...messages, { role: "user", type: "normal", content: input }]);
+			setMessages([
+				...messages,
+				{ role: "user", type: "normal", content: input },
+			]);
 			setInput("");
 			// Here you would typically call your API to get the AI's response
 			// For now, we'll just add a placeholder response
@@ -139,22 +186,11 @@ export default function TutorChat() {
 						if (message.type == "normal") {
 							const normalMessage = message as NormalTutorMessage;
 							return (
-								<Card
+								<NormalTutorMessage
 									key={index}
-									className={`mb-4 p-4 ${
-										normalMessage.role === "assistant"
-											? "bg-white"
-											: "bg-blue-100"
-									}`}
-								>
-									{normalMessage.role === "assistant" && (
-										<div className="flex items-center mb-2">
-											<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
-											<span className="font-semibold">Gizmo</span>
-										</div>
-									)}
-									<p className="whitespace-pre-wrap">{normalMessage.content}</p>
-								</Card>
+									content={normalMessage.content}
+									role={normalMessage.role}
+								/>
 							);
 						} else if (message.type == "list") {
 							const listMessage = message as ListTutorMessage;
