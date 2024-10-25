@@ -65,14 +65,9 @@ export const useUser = () => {
 	
 	const logout = () => {
 		googleLogout();
-		removeUserMutation.mutate(undefined, {
-			onSuccess: () => {
-				queryClient.invalidateQueries({ queryKey: ["user"] }).then(() => {
-					navigate('/signin'); 
-				});
-			}
-		});
+		removeUserMutation.mutate();
 	};
+	
 	
 	
 	
