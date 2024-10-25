@@ -7,7 +7,6 @@ import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 
-
 function ListMessage({
 	headerText,
 	steps,
