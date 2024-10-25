@@ -7,6 +7,7 @@ export interface DecodedUser {
 }
 
 export interface Course {
+	description: ReactNode;
 	course_id: string;
 	course_name: string;
 	user_id: string;

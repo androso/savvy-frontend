@@ -6,6 +6,8 @@ import { useCourses } from "./lib/useCourses";
 import NavigationBar from "./components/ui/NavigationBar";
 import { DecodedUser } from "./types/types";
 import Courses from "./components/CoursesList";
+import Notes from "./components/ui/Notes";
+
 
 function App() {
 	const { user, saveUser, logout, isLoading } = useUser();
@@ -51,8 +53,11 @@ function App() {
 									createCourse={createCourse}
 									deleteCourse={deleteCourse}
 								/>
+							
+							
 							</div>
 						</div>
+						
 					</div>
 					{/* <button onClick={logout}>Logout</button> */}
 				</div>
