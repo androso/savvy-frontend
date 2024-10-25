@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -49,17 +49,14 @@ function ListMessage({
 }
 
 function NormalTutorMessage({
-	key,
 	role,
 	content,
 }: {
-	key: number;
 	role: string;
 	content: string;
 }) {
 	return (
 		<Card
-			key={key}
 			className={`mb-4 p-4 ${
 				role === "assistant" ? "bg-white" : "bg-blue-100"
 			}`}
@@ -108,6 +105,12 @@ interface ConceptTutorMessage extends BaseTutorMessage {
 export default function TutorChat() {
 	const location = useLocation();
 	const course: Course = location.state?.course;
+	const navigate = useNavigate();
+
+	if (!course) {
+		navigate("/");
+	}
+
 	const [messages, setMessages] = useState<
 		(
 			| BaseTutorMessage
@@ -119,12 +122,12 @@ export default function TutorChat() {
 		{
 			role: "assistant",
 			type: "normal",
-			content: `Hablemos sobre ${course.course_name}. ¿Qué te gustaría saber al respecto?`,
+			content: `Hablemos sobre ${course?.course_name}. ¿Qué te gustaría saber al respecto?`,
 		} as NormalTutorMessage,
 	]);
 
 	const [input, setInput] = useState("");
-	const { suggestedTopics } = useSuggestedTopics(course.course_id);
+	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
 	const handleSendMessage = () => {
 		if (input.trim()) {
 			setMessages([
