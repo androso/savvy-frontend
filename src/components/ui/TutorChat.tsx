@@ -7,20 +7,84 @@ import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 
+
+function ListMessage({
+	headerText,
+	steps,
+}: {
+	headerText: string;
+	steps: Step[];
+}) {
+
+	return (
+		<Card className="mb-4 p-4 bg-white">
+			<div className="flex items-center mb-2">
+				<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
+				<span className="font-semibold">Gizmo</span>
+			</div>
+			<p className="whitespace-pre-wrap">{headerText}</p>
+			<div className="space-y-2">
+				{steps.map((step) => (
+					<div
+						key={step.order}
+						className="flex items-start bg-gray-50 rounded-md p-3 mt-3"
+					>
+						<span className="flex-shrink-0 w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center mr-3 text-sm font-medium text-gray-600">
+							{step.order}
+						</span>
+						<p className="text-gray-700">{step.title}</p>
+					</div>
+				))}
+			</div>
+		</Card>
+	);
+}
+interface Step {
+	order: number;
+	title: string;
+}
+interface BaseTutorMessage {
+	role: "assistant" | "user";
+	type: "normal" | "list" | "concept" | "flashcard";
+}
+
+interface NormalTutorMessage extends BaseTutorMessage {
+	type: "normal";
+	content: string;
+}
+
+interface ListTutorMessage extends BaseTutorMessage {
+	type: "list";
+	content: {
+		headerText: string;
+		steps: Step[];
+	};
+}
+
+interface ConceptTutorMessage extends BaseTutorMessage {
+	type: "concept";
+	content: {
+		step: Step;
+		bodyText: string;
+	};
+}
+
 export default function TutorChat() {
 	const location = useLocation();
 	const course: Course = location.state?.course;
-	const [messages, setMessages] = useState([
+	const [messages, setMessages] = useState<(BaseTutorMessage | ConceptTutorMessage | ListTutorMessage | NormalTutorMessage)[]>([
 		{
 			role: "assistant",
+			type: "normal",
 			content: `Hablemos sobre ${course.course_name}. ¿Qué te gustaría saber al respecto?`,
-		},
+		} as NormalTutorMessage,
 	]);
+
 	const [input, setInput] = useState("");
 	const { suggestedTopics } = useSuggestedTopics(course.course_id);
 	const handleSendMessage = () => {
 		if (input.trim()) {
-			setMessages([...messages, { role: "user", content: input }]);
+			setMessages([...messages, { role: "user", type: "normal", content: input }]);
 			setInput("");
 			// Here you would typically call your API to get the AI's response
 			// For now, we'll just add a placeholder response
@@ -29,6 +93,7 @@ export default function TutorChat() {
 					...prev,
 					{
 						role: "assistant",
+						type: "normal",
 						content:
 							"I'm processing your question. Please wait for my response.",
 					},
@@ -38,7 +103,10 @@ export default function TutorChat() {
 	};
 
 	const handleTopicClick = (topic: string) => {
-		setMessages([...messages, { role: "user", content: topic }]);
+		setMessages([
+			...messages,
+			{ role: "user", content: topic, type: "normal" },
+		]);
 		// Here you would typically call your API to get the AI's response
 		// For now, we'll just add a placeholder response
 		setTimeout(() => {
@@ -46,6 +114,7 @@ export default function TutorChat() {
 				...prev,
 				{
 					role: "assistant",
+					type: "normal",
 					content: `Let's discuss ${topic}. What would you like to know about it?`,
 				},
 			]);
@@ -67,22 +136,39 @@ export default function TutorChat() {
 			</header> */}
 			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
 				<div className="max-w-2xl mx-auto pb-10">
-					{messages.map((message, index) => (
-						<Card
-							key={index}
-							className={`mb-4 p-4 ${
-								message.role === "assistant" ? "bg-white" : "bg-blue-100"
-							}`}
-						>
-							{message.role === "assistant" && (
-								<div className="flex items-center mb-2">
-									<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
-									<span className="font-semibold">Gizmo</span>
-								</div>
-							)}
-							<p className="whitespace-pre-wrap">{message.content}</p>
-						</Card>
-					))}
+					{messages.map((message, index) => {
+						if (message.type == "normal") {
+							const normalMessage = message as NormalTutorMessage;
+							return (
+								<Card
+									key={index}
+									className={`mb-4 p-4 ${
+										normalMessage.role === "assistant"
+											? "bg-white"
+											: "bg-blue-100"
+									}`}
+								>
+									{normalMessage.role === "assistant" && (
+										<div className="flex items-center mb-2">
+											<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
+											<span className="font-semibold">Gizmo</span>
+										</div>
+									)}
+									<p className="whitespace-pre-wrap">{normalMessage.content}</p>
+								</Card>
+							);
+						} else if (message.type == "list") {
+							const listMessage = message as ListTutorMessage;
+							return (
+								<ListMessage
+									key={index}
+									headerText={listMessage.content.headerText}
+									steps={listMessage.content.steps}
+								/>
+							);
+						}
+					})}
+
 					{messages.length === 1 && (
 						<div className="mt-6">
 							<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
