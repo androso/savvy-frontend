@@ -48,13 +48,7 @@ function ListMessage({
 	);
 }
 
-function NormalTutorMessage({
-	role,
-	content,
-}: {
-	role: string;
-	content: string;
-}) {
+function NormalMessage({ role, content }: { role: string; content: string }) {
 	return (
 		<Card
 			className={`mb-4 p-4 ${
@@ -72,6 +66,31 @@ function NormalTutorMessage({
 	);
 }
 
+function ConceptMessage({
+	stepNumber,
+	title,
+	content,
+}: {
+	stepNumber: number;
+	title: string;
+	content: string;
+}) {
+	return (
+		<Card className="p-6 bg-white shadow-sm">
+			<div className="flex items-start mb-4">
+				<div className="flex-shrink-0 w-8 h-8 mr-3 bg-blue-100 rounded-lg flex items-center justify-center">
+					<span className="text-blue-600 font-semibold text-lg">
+						{stepNumber}
+					</span>
+				</div>
+				<h2 className="text-xl font-bold flex-grow">{title}</h2>
+			</div>
+			<hr className="border-t border-gray-200 mb-4" />
+			<p className="text-gray-700 leading-relaxed">{content}</p>
+		</Card>
+	);
+}
+
 interface Step {
 	order: number;
 	title: string;
@@ -81,7 +100,7 @@ interface BaseTutorMessage {
 	type: "normal" | "list" | "concept" | "flashcard";
 }
 
-interface NormalTutorMessage extends BaseTutorMessage {
+interface NormalMessageType extends BaseTutorMessage {
 	type: "normal";
 	content: string;
 }
@@ -94,7 +113,7 @@ interface ListTutorMessage extends BaseTutorMessage {
 	};
 }
 
-interface ConceptTutorMessage extends BaseTutorMessage {
+interface ConceptMessageType extends BaseTutorMessage {
 	type: "concept";
 	content: {
 		step: Step;
@@ -114,16 +133,16 @@ export default function TutorChat() {
 	const [messages, setMessages] = useState<
 		(
 			| BaseTutorMessage
-			| ConceptTutorMessage
+			| ConceptMessageType
 			| ListTutorMessage
-			| NormalTutorMessage
+			| NormalMessageType
 		)[]
 	>([
 		{
 			role: "assistant",
 			type: "normal",
 			content: `Hablemos sobre ${course?.course_name}. ¿Qué te gustaría saber al respecto?`,
-		} as NormalTutorMessage,
+		} as NormalMessageType,
 	]);
 
 	const [input, setInput] = useState("");
@@ -187,9 +206,9 @@ export default function TutorChat() {
 				<div className="max-w-2xl mx-auto pb-10">
 					{messages.map((message, index) => {
 						if (message.type == "normal") {
-							const normalMessage = message as NormalTutorMessage;
+							const normalMessage = message as NormalMessageType;
 							return (
-								<NormalTutorMessage
+								<NormalMessage
 									key={index}
 									content={normalMessage.content}
 									role={normalMessage.role}
@@ -202,6 +221,15 @@ export default function TutorChat() {
 									key={index}
 									headerText={listMessage.content.headerText}
 									steps={listMessage.content.steps}
+								/>
+							);
+						} else if (message.type == "concept") {
+							const conceptMessage = message as ConceptMessageType;
+							return (
+								<ConceptMessage
+									content={conceptMessage.content.bodyText}
+									stepNumber={conceptMessage.content.step.order}
+									title={conceptMessage.content.step.title}
 								/>
 							);
 						}
