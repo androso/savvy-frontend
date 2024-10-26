@@ -2,17 +2,19 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	PaperclipIcon,
+	ArrowUpIcon,
+	Book,
+	CircleX,
+	Download,
+} from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 
 // ! TODO: Add different types of messages from the tutor
-// ! TEXT: average response like "ok, let's talk about that" or "okay, let's try a new question"
-// ! STEPS: a card with a header and body, in the header it's introductory text by the ai
-// ! and in the body it's a list of steps to follow
-// ! STEP: a card with a header and body, in the header it's the step number and title and in the body it's the step text
-// ! should have the important concepts / words in bold
+// ! TODO: STEP: should have the important concepts / words in bold
 // ! FLASHCARD: in the header should go the question
 // ! in the body should go options to "reveal", "save flaschard to library", "discard"
 // ! discard a flashcard should remove the flashcard from the chat
@@ -90,6 +92,81 @@ function ConceptMessage({
 		</Card>
 	);
 }
+function FlashcardMessage({
+	question,
+	options,
+	correctOption,
+}: {
+	question: string;
+	options: string[];
+	correctOption: string;
+}) {
+	const [clickedOptions, setClickedOptions] = useState<string[]>([]);
+	const [isCorrect, setIsCorrect] = useState<boolean>(false);
+
+	const handleOptionClick = (option: string) => {
+		if (option === correctOption) {
+			setIsCorrect(true);
+		} else {
+			setIsCorrect(false);
+			setClickedOptions([...clickedOptions, option]);
+		}
+	};
+
+	return (
+		<Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
+			<div className="p-6">
+				<CardHeader className="pb-4">
+					<CardTitle className="text-center text-xl font-bold text-gray-800 px-4">
+						{question}
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-3">
+					{options.map((option, index) => (
+						<Button
+							key={index}
+							variant="outline"
+							className={`w-full justify-center h-auto py-4 px-6 text-center text-gray-700 bg-blue-50 ${
+								isCorrect && "pointer-events-none"
+							} border-gray-200 hover:bg-blue-100 ${
+								isCorrect && option === correctOption
+									? "bg-green-300"
+									: clickedOptions.includes(option)
+									? "bg-red-300"
+									: " "
+							}`}
+							onClick={() => handleOptionClick(option)}
+							disabled={clickedOptions.includes(option)}
+						>
+							{option}
+						</Button>
+					))}
+					<div className="flex justify-center space-x-4 mt-2">
+						<Button
+							variant="outline"
+							className="w-full py-3 bg-blue-50 hover:bg-green-300 border-gray-200"
+						>
+							<Download className="mr-2 h-5 w-5" /> Save
+						</Button>
+						<Button
+							variant="outline"
+							className="w-full py-3 bg-blue-50 hover:bg-blue-100 border-gray-200"
+							disabled={isCorrect}
+						>
+							<Book className="mr-2 h-5 w-5" /> Reveal
+						</Button>
+						<Button
+							variant="outline"
+							className="w-full py-3 bg-blue-50 hover:bg-red-400 border-gray-200"
+						>
+							<CircleX className="mr-2 h-5 w-5" /> Discard
+						</Button>
+					</div>
+				</CardContent>
+			</div>
+		</Card>
+	);
+}
 
 interface Step {
 	order: number;
@@ -120,6 +197,13 @@ interface ConceptMessageType extends BaseTutorMessage {
 		bodyText: string;
 	};
 }
+interface FlashcardMessageType extends BaseTutorMessage {
+	type: "flashcard";
+	content: {
+		question: string;
+		options: string[];
+	};
+}
 
 export default function TutorChat() {
 	const location = useLocation();
@@ -136,6 +220,7 @@ export default function TutorChat() {
 			| ConceptMessageType
 			| ListTutorMessage
 			| NormalMessageType
+			| FlashcardMessageType
 		)[]
 	>([
 		{
@@ -232,6 +317,15 @@ export default function TutorChat() {
 									title={conceptMessage.content.step.title}
 								/>
 							);
+						} else if (message.type == "flashcard") {
+							const flashcardMessage = message as FlashcardMessageType;
+							return (
+								<FlashcardMessage
+									options={flashcardMessage.content.options}
+									question={flashcardMessage.content.question}
+									correctOption={flashcardMessage.content.options[0]} // !TEMPORAL
+								/>
+							);
 						}
 					})}
 
@@ -253,6 +347,11 @@ export default function TutorChat() {
 							</div>
 						</div>
 					)}
+					<FlashcardMessage
+						options={["Option 1", "Option 2", "Option 3", "Option 4"]}
+						question="What is the capital of France?"
+						correctOption="Option 1"
+					/>
 				</div>
 			</div>
 			<div className="fixed bottom-[69px] bg-white  p-4 shadow-md w-full max-w-2xl mx-auto ">
