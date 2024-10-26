@@ -101,15 +101,15 @@ function FlashcardMessage({
 	options: string[];
 	correctOption: string;
 }) {
-	const [clickedOptions, setClickedOptions] = useState<string[]>([]);
-	const [isCorrect, setIsCorrect] = useState<boolean>(false);
+	const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+	const [isRevealed, setIsRevealed] = useState<boolean>(false);
 
 	const handleOptionClick = (option: string) => {
 		if (option === correctOption) {
-			setIsCorrect(true);
+			setIsRevealed(true);
 		} else {
-			setIsCorrect(false);
-			setClickedOptions([...clickedOptions, option]);
+			setIsRevealed(false);
+			setSelectedOptions([...selectedOptions, option]);
 		}
 	};
 
@@ -127,16 +127,17 @@ function FlashcardMessage({
 							key={index}
 							variant="outline"
 							className={`w-full justify-center h-auto py-4 px-6 text-center text-gray-700 bg-blue-50 ${
-								isCorrect && "pointer-events-none"
+								(isRevealed || selectedOptions.includes(option)) &&
+								"pointer-events-none"
 							} border-gray-200 hover:bg-blue-100 ${
-								isCorrect && option === correctOption
+								isRevealed && option === correctOption
 									? "bg-green-300"
-									: clickedOptions.includes(option)
+									: selectedOptions.includes(option)
 									? "bg-red-300"
 									: " "
 							}`}
 							onClick={() => handleOptionClick(option)}
-							disabled={clickedOptions.includes(option)}
+							disabled={isRevealed ? option !== correctOption : false}
 						>
 							{option}
 						</Button>
@@ -151,7 +152,8 @@ function FlashcardMessage({
 						<Button
 							variant="outline"
 							className="w-full py-3 bg-blue-50 hover:bg-blue-100 border-gray-200"
-							disabled={isCorrect}
+							disabled={isRevealed}
+							onClick={() => setIsRevealed(true)}
 						>
 							<Book className="mr-2 h-5 w-5" /> Reveal
 						</Button>
@@ -202,6 +204,7 @@ interface FlashcardMessageType extends BaseTutorMessage {
 	content: {
 		question: string;
 		options: string[];
+		correctOption: string;
 	};
 }
 
@@ -323,7 +326,7 @@ export default function TutorChat() {
 								<FlashcardMessage
 									options={flashcardMessage.content.options}
 									question={flashcardMessage.content.question}
-									correctOption={flashcardMessage.content.options[0]} // !TEMPORAL
+									correctOption={flashcardMessage.content.correctOption}
 								/>
 							);
 						}
