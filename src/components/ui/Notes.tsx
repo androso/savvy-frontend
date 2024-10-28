@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+'use client'
+
+import React, { useState } from 'react'
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { 
   BookOpen, 
   Search, 
@@ -13,127 +15,138 @@ import {
   Check,
   X,
   Trash2,
-  Download
-} from 'lucide-react';
-import { useCourses } from '@/lib/useCourses';
-import { useUser } from '@/lib/useUser';
+  Download,
+  Star
+} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useCourses } from '@/lib/useCourses'
+import { useUser } from '@/lib/useUser'
+import { cn } from "@/lib/utils"
 
-type ViewType = 'grid' | 'list' | 'compact';
-type FilterType = 'all' | 'favorite' | 'archived';
+type ViewType = 'grid' | 'list' | 'compact'
+type FilterType = 'all' | 'favorite' | 'archived'
 
-const NotesPage = () => {
-  const { user } = useUser();
-  const { courses } = useCourses(user?.user_id || "");
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<ViewType>('list');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterType, setFilterType] = useState<FilterType>('all');
+export default function NotesPage() {
+  const { user } = useUser()
+  const { courses } = useCourses(user?.user_id || "")
+  const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState<ViewType>('list')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [filterType, setFilterType] = useState<FilterType>('all')
   const [notification, setNotification] = useState<{
-    message: string;
-    type: 'success' | 'error';
-  } | null>(null);
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [archived, setArchived] = useState<string[]>([]);
-  const [showArchiveConfirm, setShowArchiveConfirm] = useState<string | null>(null);
+    message: string
+    type: 'success' | 'error'
+  } | null>(null)
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([])
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [archived, setArchived] = useState<string[]>([])
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState<string | null>(null)
 
   // Filter courses
-  const filteredCourses = courses.filter((course: { course_name: string; description: string; course_id: string; }) => {
+  const filteredCourses = courses.filter((course: { course_name: string; description: string; course_id: string }) => {
     const matchesSearch = 
       course.course_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      course.description?.toLowerCase().includes(searchTerm.toLowerCase())
 
     if (filterType === 'all') {
-      return matchesSearch && !archived.includes(course.course_id);
+      return matchesSearch && !archived.includes(course.course_id)
     }
     if (filterType === 'favorite') {
-      return matchesSearch && favorites.includes(course.course_id);
+      return matchesSearch && favorites.includes(course.course_id)
     }
     if (filterType === 'archived') {
-      return matchesSearch && archived.includes(course.course_id);
+      return matchesSearch && archived.includes(course.course_id)
     }
-    return matchesSearch;
-  });
+    return matchesSearch
+  })
 
   // Sort courses
   const sortedCourses = [...filteredCourses].sort((a, b) => {
     return sortOrder === 'asc' 
       ? a.course_name.localeCompare(b.course_name)
-      : b.course_name.localeCompare(a.course_name);
-  });
+      : b.course_name.localeCompare(a.course_name)
+  })
 
   const showNotification = (message: string, type: 'success' | 'error') => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
 
   const toggleFavorite = (courseId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+    event.stopPropagation()
     setFavorites(prev => 
       prev.includes(courseId) 
         ? prev.filter(id => id !== courseId)
         : [...prev, courseId]
-    );
+    )
     showNotification(
       favorites.includes(courseId) 
         ? 'Curso removido de favoritos' 
         : 'Curso añadido a favoritos',
       'success'
-    );
-  };
+    )
+  }
 
   const handleArchive = (courseId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setShowArchiveConfirm(courseId);
-  };
+    event.stopPropagation()
+    setShowArchiveConfirm(courseId)
+  }
 
   const confirmArchive = (courseId: string) => {
-    setArchived(prev => [...prev, courseId]);
-    setShowArchiveConfirm(null);
-    showNotification('Curso archivado', 'success');
-  };
+    setArchived(prev => [...prev, courseId])
+    setShowArchiveConfirm(null)
+    showNotification('Curso archivado', 'success')
+  }
 
   const unarchive = (courseId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setArchived(prev => prev.filter(id => id !== courseId));
-    showNotification('Curso restaurado', 'success');
-  };
+    event.stopPropagation()
+    setArchived(prev => prev.filter(id => id !== courseId))
+    showNotification('Curso restaurado', 'success')
+  }
 
   const downloadCourses = () => {
     const coursesToDownload = selectedCourses.length > 0 
-      ? courses.filter((course: { course_id: string; }) => selectedCourses.includes(course.course_id))
-      : filteredCourses;
+      ? courses.filter((course: { course_id: string }) => selectedCourses.includes(course.course_id))
+      : filteredCourses
 
-    const content = coursesToDownload.map((course: { course_name: any; description: any; course_id: string; }) => `
+    const content = coursesToDownload.map((course: { course_name: any; description: any; course_id: string }) => `
 Curso: ${course.course_name}
 Descripción: ${course.description || 'Sin descripción'}
 Estado: ${archived.includes(course.course_id) ? 'Archivado' : favorites.includes(course.course_id) ? 'Favorito' : 'Activo'}
 Creado por: ${user?.name || 'Desconocido'}
 ----------------------------------------
-    `).join('\n');
+    `).join('\n')
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'cursos.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showNotification('Cursos descargados exitosamente', 'success');
-  };
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'cursos.txt'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    showNotification('Cursos descargados exitosamente', 'success')
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto">
         {notification && (
           <div 
-            className={`mb-4 p-3 rounded-md flex items-center justify-between ${
-              notification.type === 'success' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}
+            className={cn(
+              "mb-4 p-3 rounded-md flex items-center justify-between",
+              notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            )}
           >
             <div className="flex items-center gap-2">
               {notification.type === 'success' ? (
@@ -146,30 +159,24 @@ Creado por: ${user?.name || 'Desconocido'}
           </div>
         )}
 
-        {showArchiveConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-background p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-lg font-semibold mb-4">¿Archivar curso?</h3>
-              <p className="text-muted-foreground mb-6">
+        <Dialog open={!!showArchiveConfirm} onOpenChange={() => setShowArchiveConfirm(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Archivar curso?</DialogTitle>
+              <DialogDescription>
                 ¿Estás seguro de que deseas archivar este curso? Podrás restaurarlo más tarde.
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowArchiveConfirm(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => confirmArchive(showArchiveConfirm)}
-                >
-                  Archivar
-                </Button>
-              </div>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowArchiveConfirm(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={() => showArchiveConfirm && confirmArchive(showArchiveConfirm)}>
+                Archivar
+              </Button>
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         <Card className="w-full">
           <CardHeader>
@@ -179,48 +186,43 @@ Creado por: ${user?.name || 'Desconocido'}
                   <BookOpen className="w-5 h-5" />
                   Notas del Curso
                   {selectedCourses.length > 0 && (
-                    <span className="text-sm font-normal ml-2">
-                      ({selectedCourses.length} seleccionados)
-                    </span>
+                    <Badge variant="secondary" className="ml-2">
+                      {selectedCourses.length} seleccionados
+                    </Badge>
                   )}
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadCourses}
-                    className="flex items-center gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Descargar
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadCourses}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar
+                </Button>
               </div>
               
               <div className="flex flex-wrap gap-2">
                 <Button
-                  variant="outline"
+                  variant={filterType === 'all' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('all')}
-                  className={`${filterType === 'all' ? 'bg-primary text-primary-foreground' : ''}`}
                 >
                   Todos
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={filterType === 'favorite' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('favorite')}
-                  className={`${filterType === 'favorite' ? 'bg-primary text-primary-foreground' : ''}`}
                 >
-                  Favoritos +{favorites.length}
+                  Favoritos <Badge variant="secondary" className="ml-1">{favorites.length}</Badge>
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={filterType === 'archived' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setFilterType('archived')}
-                  className={`${filterType === 'archived' ? 'bg-primary text-primary-foreground' : ''}`}
                 >
-                  Archivados +{archived.length}
+                  Archivados <Badge variant="secondary" className="ml-1">{archived.length}</Badge>
                 </Button>
               </div>
 
@@ -240,10 +242,10 @@ Creado por: ${user?.name || 'Desconocido'}
                     size="icon"
                     onClick={() => {
                       setViewMode(prev => {
-                        if (prev === 'list') return 'grid';
-                        if (prev === 'grid') return 'compact';
-                        return 'list';
-                      });
+                        if (prev === 'list') return 'grid'
+                        if (prev === 'grid') return 'compact'
+                        return 'list'
+                      })
                     }}
                   >
                     {viewMode === 'list' ? (
@@ -270,14 +272,15 @@ Creado por: ${user?.name || 'Desconocido'}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[calc(100vh-300px)] w-full rounded-md border overflow-y-auto">
-              <div className={`p-4 ${
+            <ScrollArea className="h-[calc(100vh-300px)] w-full rounded-md border">
+              <div className={cn(
+                "p-4",
                 viewMode === 'grid' 
                   ? 'grid grid-cols-1 md:grid-cols-2 gap-4' 
                   : viewMode === 'compact'
                     ? 'space-y-2'
                     : 'space-y-4'
-              }`}>
+              )}>
                 {sortedCourses.length > 0 ? (
                   sortedCourses.map((course) => (
                     <div
@@ -287,42 +290,52 @@ Creado por: ${user?.name || 'Desconocido'}
                           ? prev.filter(id => id !== course.course_id)
                           : [...prev, course.course_id]
                       )}
-                      className={`bg-card rounded-lg ${
-                        viewMode === 'compact' ? 'p-2' : 'p-4'
-                      } space-y-2 border cursor-pointer
-                        ${selectedCourses.includes(course.course_id) 
+                      className={cn(
+                        "bg-card rounded-lg",
+                        viewMode === 'compact' ? 'p-2' : 'p-4',
+                        "space-y-2 border cursor-pointer",
+                        selectedCourses.includes(course.course_id) 
                           ? 'border-primary ring-2 ring-primary ring-opacity-50' 
-                          : 'hover:border-primary transition-colors'}`}
+                          : 'hover:border-primary transition-colors'
+                      )}
                     >
                       <div className="flex justify-between items-start">
-                        <h3 className={`font-medium text-primary ${
+                        <h3 className={cn(
+                          "font-medium text-primary",
                           viewMode === 'compact' ? 'text-sm' : 'text-lg'
-                        }`}>
+                        )}>
                           {course.course_name}
                         </h3>
                         <div className="flex items-center gap-2">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => toggleFavorite(course.course_id, e)}
-                            className={`text-yellow-500 hover:text-yellow-600 ${
+                            className={cn(
+                              "text-yellow-500 hover:text-yellow-600",
                               favorites.includes(course.course_id) ? 'opacity-100' : 'opacity-30'
-                            }`}
+                            )}
                           >
-                            ★
-                          </button>
+                            <Star className="h-4 w-4" />
+                          </Button>
                           {filterType === 'archived' ? (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={(e) => unarchive(course.course_id, e)}
                               className="text-blue-500 hover:text-blue-600"
                             >
                               <Check className="h-4 w-4" />
-                            </button>
+                            </Button>
                           ) : (
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               onClick={(e) => handleArchive(course.course_id, e)}
                               className="text-gray-500 hover:text-gray-600"
                             >
                               <Trash2 className="h-4 w-4" />
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -342,12 +355,10 @@ Creado por: ${user?.name || 'Desconocido'}
                   </div>
                 )}
               </div>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>
     </div>
-  );
-};
-
-export default NotesPage;
+  )
+}
