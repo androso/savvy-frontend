@@ -9,5 +9,6 @@ export interface DecodedUser {
 export interface Course {
 	course_id: string;
 	course_name: string;
+	description: string;
 	user_id: string;
 }
