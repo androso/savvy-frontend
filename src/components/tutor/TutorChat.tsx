@@ -12,7 +12,14 @@ import {
 } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
-import { BaseTutorMessage, ConceptMessageType, FlashcardMessageType, ListTutorMessage, NormalMessageType, Step } from "./types";
+import {
+	BaseTutorMessage,
+	ConceptMessageType,
+	FlashcardMessageType,
+	ListTutorMessage,
+	NormalMessageType,
+	Step,
+} from "./types";
 
 // ! TODO: Add different types of messages from the tutor
 // ! TODO: STEP: should have the important concepts / words in bold
@@ -250,11 +257,27 @@ export default function TutorChat() {
 
 	return (
 		<div className="flex flex-col h-full bg-gray-100 items-center ">
-			{/* <header className="bg-white shadow-sm py-4 px-6 w-full">
-				<h1 className="text-xl font-semibold text-center ">AI Tutor</h1>
-			</header> */}
 			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
+				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
+					{/* SUGGESTED TOPICS */}
+					<div className="mt-6">
+						<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
+						<div className="flex flex-wrap gap-3">
+							{suggestedTopics &&
+								suggestedTopics?.map((topic, index) => (
+									<Button
+										key={index}
+										variant={"outline"}
+										className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
+										onClick={() => handleTopicClick(topic)}
+									>
+										{topic}
+									</Button>
+								))}
+						</div>
+					</div>
+					{/* USER / TUTOR MESSAGES */}
 					{messages.map((message, index) => {
 						if (message.type == "normal") {
 							const normalMessage = message as NormalMessageType;
@@ -294,32 +317,10 @@ export default function TutorChat() {
 							);
 						}
 					})}
-
-					{messages.length === 1 && (
-						<div className="mt-6">
-							<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
-							<div className="flex flex-wrap gap-3">
-								{suggestedTopics &&
-									suggestedTopics?.map((topic, index) => (
-										<Button
-											key={index}
-											variant={"outline"}
-											className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
-											onClick={() => handleTopicClick(topic)}
-										>
-											{topic}
-										</Button>
-									))}
-							</div>
-						</div>
-					)}
-					<FlashcardMessage
-						options={["Option 1", "Option 2", "Option 3", "Option 4"]}
-						question="What is the capital of France?"
-						correctOption="Option 1"
-					/>
 				</div>
 			</div>
+
+			{/*  USER INPUT BOX */}
 			<div className="fixed bottom-[69px] bg-white  p-4 shadow-md w-full max-w-2xl mx-auto ">
 				<div className="flex items-center">
 					<label htmlFor="file-upload" className="mr-2">
