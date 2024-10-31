@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
+import { BaseTutorMessage, ConceptMessageType, FlashcardMessageType, ListTutorMessage, NormalMessageType, Step } from "./types";
 
 // ! TODO: Add different types of messages from the tutor
 // ! TODO: STEP: should have the important concepts / words in bold
@@ -168,44 +169,6 @@ function FlashcardMessage({
 			</div>
 		</Card>
 	);
-}
-
-interface Step {
-	order: number;
-	title: string;
-}
-interface BaseTutorMessage {
-	role: "assistant" | "user";
-	type: "normal" | "list" | "concept" | "flashcard";
-}
-
-interface NormalMessageType extends BaseTutorMessage {
-	type: "normal";
-	content: string;
-}
-
-interface ListTutorMessage extends BaseTutorMessage {
-	type: "list";
-	content: {
-		headerText: string;
-		steps: Step[];
-	};
-}
-
-interface ConceptMessageType extends BaseTutorMessage {
-	type: "concept";
-	content: {
-		step: Step;
-		bodyText: string;
-	};
-}
-interface FlashcardMessageType extends BaseTutorMessage {
-	type: "flashcard";
-	content: {
-		question: string;
-		options: string[];
-		correctOption: string;
-	};
 }
 
 export default function TutorChat() {
