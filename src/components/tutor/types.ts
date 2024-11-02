@@ -6,6 +6,7 @@ export interface Step {
 export interface BaseTutorMessage {
     role: "assistant" | "user";
     type: "normal" | "list" | "concept" | "flashcard";
+    content: any;
 }
 
 export interface NormalMessageType extends BaseTutorMessage {
