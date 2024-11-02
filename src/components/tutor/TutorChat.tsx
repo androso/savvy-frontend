@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import {
 	Book,
 	CircleX,
 	Download,
+	Loader2,
 } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
@@ -20,6 +21,7 @@ import {
 	NormalMessageType,
 	Step,
 } from "./types";
+import { useThread } from "../../lib/useThread";
 
 // ! TODO: Add different types of messages from the tutor
 // ! TODO: STEP: should have the important concepts / words in bold
@@ -178,14 +180,30 @@ function FlashcardMessage({
 	);
 }
 
+function LoadingSpinner() {
+	return (
+		<div className="flex items-center justify-center h-full">
+			<Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+			<span className="ml-2 text-gray-600">
+				Creando tu sesión de tutoría...
+			</span>
+		</div>
+	);
+}
+
 export default function TutorChat() {
 	const location = useLocation();
+	const { threadId } = useParams();
 	const course: Course = location.state?.course;
 	const navigate = useNavigate();
+	const { thread, isLoading, error } = useThread();
 
-	if (!course) {
-		navigate("/");
-	}
+	// Handle no course data
+	useEffect(() => {
+		if (!course && !threadId) {
+			navigate("/");
+		}
+	}, [course, threadId]);
 
 	const [messages, setMessages] = useState<
 		(
@@ -195,88 +213,123 @@ export default function TutorChat() {
 			| NormalMessageType
 			| FlashcardMessageType
 		)[]
-	>([
-		{
-			role: "assistant",
-			type: "normal",
-			content: `Hablemos sobre ${course?.course_name}. ¿Qué te gustaría saber al respecto?`,
-		} as NormalMessageType,
-	]);
-
+	>([]);
 	const [input, setInput] = useState("");
 	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
-	const handleSendMessage = () => {
-		if (input.trim()) {
-			setMessages([
-				...messages,
-				{ role: "user", type: "normal", content: input },
-			]);
-			setInput("");
-			// Here you would typically call your API to get the AI's response
-			// For now, we'll just add a placeholder response
-			setTimeout(() => {
-				setMessages((prev) => [
-					...prev,
-					{
-						role: "assistant",
-						type: "normal",
-						content:
-							"I'm processing your question. Please wait for my response.",
-					},
-				]);
-			}, 1000);
-		}
-	};
+	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
+		course?.course_id ? true : false
+	);
 
-	const handleTopicClick = (topic: string) => {
-		setMessages([
-			...messages,
-			{ role: "user", content: topic, type: "normal" },
+	// Initialize messages when thread is loaded
+	useEffect(() => {
+		if (thread && course && messages.length === 0) {
+			setMessages([
+				{
+					role: "assistant",
+					type: "normal",
+					content: `Hablemos sobre ${course.course_name}. ¿Qué te gustaría saber al respecto?`,
+				} as NormalMessageType,
+			]);
+		}
+	}, [thread, course]);
+
+	const handleSendMessage = async () => {
+		if (!input.trim() || !thread) return;
+
+		// Add user message
+		setMessages((prev) => [
+			...prev,
+			{
+				role: "user",
+				type: "normal",
+				content: input,
+			},
 		]);
-		// Here you would typically call your API to get the AI's response
-		// For now, we'll just add a placeholder response
-		setTimeout(() => {
+
+		setInput("");
+		setShowSuggestedTopics(false);
+
+		try {
+			// Send message to thread
+			// const response = await axios.post("/api/assistants/threads/messages", {
+			// 	thread,
+			// 	message: input,
+			// });
+
+			// Add assistant response
 			setMessages((prev) => [
 				...prev,
 				{
 					role: "assistant",
 					type: "normal",
-					content: `Let's discuss ${topic}. What would you like to know about it?`,
+					content: "I'm processing your question. Please wait for my response.",
 				},
 			]);
-		}, 1000);
-	};
-
-	const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-		// This is a placeholder for file upload functionality
-		if (event.target?.files) {
-			console.log("File selected:", event.target.files[0]);
-			// Here you would typically handle the file upload
+		} catch (err) {
+			console.error("Error sending message:", err);
 		}
 	};
 
+	const handleTopicClick = async (topic: string) => {
+		if (!thread) return;
+
+		setMessages((prev) => [
+			...prev,
+			{
+				role: "user",
+				type: "normal",
+				content: topic,
+			},
+		]);
+
+		setShowSuggestedTopics(false);
+
+		// try {
+		// 	await axios.post("/api/assistants/threads/messages", {
+		// 		thread,
+		// 		message: topic,
+		// 	});
+
+		// 	setMessages((prev) => [
+		// 		...prev,
+		// 		{
+		// 			role: "assistant",
+		// 			type: "normal",
+		// 			content: `Let's discuss ${topic}. What would you like to know about it?`,
+		// 		},
+		// 	]);
+		// } catch (err) {
+		// 	console.error("Error sending topic:", err);
+		// }
+	};
+
+	if (isLoading) {
+		return <LoadingSpinner />;
+	}
+
+	if (error || !thread) {
+		return (
+			<div className="flex items-center justify-center h-full">
+				<Card className="max-w-md p-6">
+					<CardTitle className="text-red-600 mb-4">Error</CardTitle>
+					<p className="text-gray-700">
+						{error?.message ||
+							"Lo sentimos, no pudimos iniciar tu sesión de tutoría. Por favor, intenta de nuevo más tarde."}
+					</p>
+					<Button className="mt-4" onClick={() => navigate("/")}>
+						Volver al inicio
+					</Button>
+				</Card>
+			</div>
+		);
+	}
+
+	// Return the main chat interface only when we have a valid thread
 	return (
-		<div className="flex flex-col h-full bg-gray-100 items-center ">
+		<div className="flex flex-col h-full bg-gray-100 items-center">
 			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
 				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
-					{/* SUGGESTED TOPICS */}
-					<div className="mt-6">
-						<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
-						<div className="flex flex-wrap gap-3">
-							{suggestedTopics &&
-								suggestedTopics?.map((topic, index) => (
-									<Button
-										key={index}
-										variant={"outline"}
-										className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
-										onClick={() => handleTopicClick(topic)}
-									>
-										{topic}
-									</Button>
-								))}
-						</div>
-					</div>
 					{/* USER / TUTOR MESSAGES */}
 					{messages.map((message, index) => {
 						if (message.type == "normal") {
@@ -317,6 +370,26 @@ export default function TutorChat() {
 							);
 						}
 					})}
+
+					{/* Conditionally render suggested topics */}
+					{showSuggestedTopics && (
+						<div className="mt-6">
+							<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
+							<div className="flex flex-wrap gap-3">
+								{suggestedTopics &&
+									suggestedTopics?.map((topic, index) => (
+										<Button
+											key={index}
+											variant={"outline"}
+											className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
+											onClick={() => handleTopicClick(topic)}
+										>
+											{topic}
+										</Button>
+									))}
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -339,7 +412,7 @@ export default function TutorChat() {
 						id="file-upload"
 						type="file"
 						className="hidden"
-						onChange={(event) => handleFileUpload(event)}
+						// onChange={(event) => handleFileUpload(event)}
 						aria-label="File upload"
 					/>
 					<Input
