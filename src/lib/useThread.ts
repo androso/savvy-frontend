@@ -1,4 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { axios } from "./utils";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -47,9 +51,18 @@ export function useThread() {
 		},
 		onSuccess: (thread) => {
 			if (thread?.id) {
-				// Add validation
+				const course = location.state?.course;
 				queryClient.setQueryData(["thread", thread.id], thread);
-				navigate(`/tutor/${thread.id}`, {
+
+				const searchParams = new URLSearchParams();
+				if (course?.course_name) {
+					searchParams.set("course_name", course.course_name);
+				}
+				const queryString = searchParams.toString()
+					? `?${searchParams.toString()}`
+					: "";
+
+				navigate(`/tutor/${thread.id}${queryString}`, {
 					replace: true,
 					state: {
 						course: location.state?.course,

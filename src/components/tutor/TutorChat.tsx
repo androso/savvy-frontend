@@ -54,12 +54,6 @@ export default function TutorChat() {
 	);
 
 	useEffect(() => {
-		// if (course?.course_name && thread) {
-		// 	const searchParams = new URLSearchParams(window.location.search);
-		// 	searchParams.set("course_name", course.course_name);
-
-		// 	navigate(`?${searchParams.toString()}`, { replace: true });
-		// }
 		if (thread && course && messages.length === 0) {
 			setMessages([
 				{
