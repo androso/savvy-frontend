@@ -7,7 +7,6 @@ import { PaperclipIcon, ArrowUpIcon } from "lucide-react";
 import { useSuggestedTopics } from "@/lib/useSuggestedTopics";
 import { Course } from "@/types/types";
 import {
-	BaseTutorMessage,
 	ConceptMessageType,
 	FlashcardMessageType,
 	ListTutorMessage,
@@ -20,6 +19,13 @@ import ListMessage from "./ListMessage";
 import NormalMessage from "./NormalMessage";
 import LoadingSpinner from "../LoadingSpinner";
 import ConceptMessage from "./ConceptMessage";
+
+const MessageComponent = {
+	normal: NormalMessage,
+	list: ListMessage,
+	// concept: ConceptMessage,
+	// flashcard: FlashcardMessage,
+} as const;
 
 // TODO: If i reload, i would like to see the history of my thread.
 // right now this is getting saved, but the backend isn't returning the right structure
@@ -38,15 +44,6 @@ export default function TutorChat() {
 		}
 	}, [course, threadId]);
 
-	const [messages, setMessages] = useState<
-		(
-			| BaseTutorMessage
-			| ConceptMessageType
-			| ListTutorMessage
-			| NormalMessageType
-			| FlashcardMessageType
-		)[]
-	>([]);
 	const [input, setInput] = useState("");
 	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
 	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
@@ -54,131 +51,104 @@ export default function TutorChat() {
 	);
 
 	useEffect(() => {
-		if (thread && course && messages.length === 0) {
-			setMessages([
-				{
-					role: "assistant",
-					type: "normal",
-					content: `Hablemos sobre ${course.course_name}. ¿Qué te gustaría saber al respecto?`,
-				} as NormalMessageType,
-			]);
+		if (!thread?.messages[1]) {
+			setShowSuggestedTopics(true);
+		} else {
+			setShowSuggestedTopics(false);
 		}
-	}, [course, thread]);
-
-	// useEffect(() => {
-	// 	const searchParams = new URLSearchParams(window.location.search);
-	// 	const courseName = searchParams.get("course_name");
-	// 	setMessages([
-	// 		{
-	// 			role: "assistant",
-	// 			type: "normal",
-	// 			content: `Hablemos sobre ${courseName}. ¿Qué te gustaría saber al respecto?`,
-	// 		} as NormalMessageType,
-	// 	]);
-	// }, []);
+	}, [thread]);
 
 	const handleSendMessage = async () => {
-		if (!input.trim() || !thread) return;
-
-		const isFirstMessage =
-			messages.filter((m) => m.role === "user").length === 0;
-		const currentInput = input;
-
-		// Add user message
-		setMessages((prev) => [
-			...prev,
-			{
-				role: "user",
-				type: "normal",
-				content: currentInput,
-			},
-		]);
-
-		setInput("");
-
-		try {
-			// Show loading state
-			setMessages((prev) => [
-				...prev,
-				{
-					role: "assistant",
-					type: "normal",
-					content: "Processing your request...",
-				},
-			]);
-
-			if (isFirstMessage) {
-				const response = await axios.post(
-					`/api/assistant/threads/${thread.id}/messages`,
-					{
-						content: currentInput,
-						messageType: "list",
-					}
-				);
-
-				// Remove loading message and add response
-				setMessages((prev) => [
-					...prev.filter((m) => m.content !== "Processing your request..."),
-					response.data,
-				]);
-			}
-		} catch (err) {
-			console.error("Error processing message:", err);
-			setMessages((prev) => [
-				...prev.filter((m) => m.content !== "Processing your request..."),
-				{
-					role: "assistant",
-					type: "normal",
-					content: "Sorry, there was an error processing your request.",
-				},
-			]);
-		}
+		// if (!input.trim() || !thread) return;
+		// const isFirstMessage =
+		// 	messages.filter((m) => m.role === "user").length === 0;
+		// const currentInput = input;
+		// // Add user message
+		// setMessages((prev) => [
+		// 	...prev,
+		// 	{
+		// 		role: "user",
+		// 		type: "normal",
+		// 		content: currentInput,
+		// 	},
+		// ]);
+		// setInput("");
+		// try {
+		// 	// Show loading state
+		// 	setMessages((prev) => [
+		// 		...prev,
+		// 		{
+		// 			role: "assistant",
+		// 			type: "normal",
+		// 			content: "Processing your request...",
+		// 		},
+		// 	]);
+		// 	if (isFirstMessage) {
+		// 		const response = await axios.post(
+		// 			`/api/assistant/threads/${thread.id}/messages`,
+		// 			{
+		// 				content: currentInput,
+		// 				messageType: "list",
+		// 			}
+		// 		);
+		// 		// Remove loading message and add response
+		// 		setMessages((prev) => [
+		// 			...prev.filter((m) => m.content !== "Processing your request..."),
+		// 			response.data,
+		// 		]);
+		// 	}
+		// } catch (err) {
+		// 	console.error("Error processing message:", err);
+		// 	setMessages((prev) => [
+		// 		...prev.filter((m) => m.content !== "Processing your request..."),
+		// 		{
+		// 			role: "assistant",
+		// 			type: "normal",
+		// 			content: "Sorry, there was an error processing your request.",
+		// 		},
+		// 	]);
+		// }
 	};
 
 	const handleTopicClick = async (topic: string) => {
-		if (!thread) return;
-
-		const isFirstMessage =
-			messages.filter((m) => m.role === "user").length === 0;
-
-		setMessages((prev) => [
-			...prev,
-			{
-				role: "user",
-				type: "normal",
-				content: topic,
-			},
-		]);
-
-		try {
-			if (isFirstMessage) {
-				setMessages((prev) => [
-					...prev,
-					{
-						role: "assistant",
-						type: "normal",
-						content: "Processing your request...",
-					},
-				]);
-
-				const response = await axios.post(
-					`/api/assistants/threads/${thread.id}/messages`,
-					{
-						content: topic,
-						messageType: "list",
-					}
-				);
-
-				setMessages((prev) => [
-					...prev.filter((m) => m.content !== "Processing your request..."),
-					response.data,
-				]);
-			}
-		} catch (err) {
-			console.error("Error processing topic:", err);
-		}
-
-		setShowSuggestedTopics(false);
+		topic;
+		// if (!thread) return;
+		// const isFirstMessage =
+		// 	messages.filter((m) => m.role === "user").length === 0;
+		// setMessages((prev) => [
+		// 	...prev,
+		// 	{
+		// 		role: "user",
+		// 		type: "normal",
+		// 		content: topic,
+		// 	},
+		// ]);
+		// try {
+		// 	if (isFirstMessage) {
+		// 		setMessages((prev) => [
+		// 			...prev,
+		// 			{
+		// 				role: "assistant",
+		// 				type: "normal",
+		// 				content: "Processing your request...",
+		// 			},
+		// 		]);
+		// 		const response = await axios.post(
+		// 			`/api/assistants/threads/${thread.id}/messages`,
+		// 			{
+		// 				content: topic,
+		// 				messageType: "list",
+		// 			}
+		// 		);
+		// 		setMessages((prev) => [
+		// 			...prev.filter((m) => m.content !== "Processing your request..."),
+		// 			response.data,
+		// 		]);
+		// 	}
+		// } catch (err) {
+		// 	console.error("Error processing topic:", err);
+		// }
+		// setShowSuggestedTopics(false);
 	};
 
 	if (isLoading) {
@@ -208,7 +178,12 @@ export default function TutorChat() {
 			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
 				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
-					<NormalMessage content={messages[0]?.content} role="assistant" />
+					{thread?.messages[0] && (
+						<NormalMessage
+							content={thread?.messages[0]?.content as any}
+							role="assistant"
+						/>
+					)}
 
 					{/* Conditionally render suggested topics */}
 					{showSuggestedTopics && (
@@ -229,9 +204,26 @@ export default function TutorChat() {
 							</div>
 						</div>
 					)}
+					{thread?.messages.slice(1)?.map((message, index) => {
+						const Component =
+							MessageComponent[message.type as keyof typeof MessageComponent];
 
+						if (!Component) {
+							console.warn(`Unknown message type: ${message.type}`);
+							return null;
+						}
+						console.log({ message });
+
+						return (
+							<Component
+								key={index}
+								role={message.role}
+								content={message.content as any}
+							/>
+						);
+					})}
 					{/* USER / TUTOR MESSAGES */}
-					{messages.slice(1).map((message, index) => {
+					{/* {messages.slice(1).map((message, index) => {
 						if (message.type == "normal") {
 							const normalMessage = message as NormalMessageType;
 							return (
@@ -269,7 +261,7 @@ export default function TutorChat() {
 								/>
 							);
 						}
-					})}
+					})} */}
 				</div>
 			</div>
 

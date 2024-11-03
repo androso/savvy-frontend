@@ -1,19 +1,23 @@
-import {
-	useMutation,
-	useQuery,
-	useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { axios } from "./utils";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ListContent } from "@/components/tutor/ListMessage";
+
+type ThreadMessage = {
+	type: "normal" | "list" | "concept" | "eli5" | "flashcard" | "detail";
+	role: "user" | "assistant";
+	content: string | ListContent;
+	stepNumber?: number;
+};
 
 type Thread = {
-	request_id: string;
-	created_at: string | Date;
 	id: string;
-	metadata: Record<string, any>;
 	object: string;
-	tool_resources: Array<any>; // You might want to define a more specific type for tool resources
+	created_at: string | Date;
+	metadata: Record<string, any>;
+	messages: ThreadMessage[];
+	tool_resources: Array<any>;
 };
 
 const createThread = async () => {
@@ -22,9 +26,17 @@ const createThread = async () => {
 	return response.data.data as Thread;
 };
 
-const fetchThread = async (threadId: string) => {
+const fetchThread = async (threadId: string, courseName: string) => {
 	if (!threadId) return null;
-	const response = await axios.get(`/api/assistants/threads/${threadId}`);
+	const params = new URLSearchParams();
+	if (courseName) {
+		params.set("course_name", courseName);
+	}
+
+	const response = await axios.get(
+		`/api/assistants/threads/${threadId}?${params.toString()}`
+	);
+
 	return response.data.data as Thread;
 };
 
@@ -38,7 +50,7 @@ export function useThread() {
 	// Query for existing thread
 	const { data: existingThread, isLoading: isLoadingExisting } = useQuery({
 		queryKey: ["thread", threadId],
-		queryFn: () => fetchThread(threadId!),
+		queryFn: () => fetchThread(threadId!, location.state?.course?.course_name),
 		enabled: !!threadId,
 		staleTime: Infinity, // Prevent unnecessary refetches
 	});
