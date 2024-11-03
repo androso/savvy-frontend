@@ -11,7 +11,6 @@ import TutorChat from "./components/tutor/TutorChat.tsx";
 import NavigationBar from "./components/ui/NavigationBar.tsx";
 import Login from "./components/ui/Login.tsx";
 
-
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const queryClient = new QueryClient();
 

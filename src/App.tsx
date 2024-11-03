@@ -6,7 +6,6 @@ import { useCourses } from "./lib/useCourses";
 import { DecodedUser } from "./types/types";
 import Courses from "./components/CoursesList";
 
-
 function App() {
 	const { user, saveUser, isLoading } = useUser();
 	const { courses, createCourse, deleteCourse } = useCourses(
@@ -51,10 +50,13 @@ function App() {
 									createCourse={createCourse}
 									deleteCourse={deleteCourse}
 								/>
+							
+							
 							</div>
 						</div>
+						
 					</div>
-					{/* <button onClick={logout}>Logout</button> */}
+				 {/*<button onClick={logout}>Logout</button>*/}
 				</div>
 			)}
 		</div>

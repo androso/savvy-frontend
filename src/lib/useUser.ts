@@ -62,11 +62,15 @@ export const useUser = () => {
 			queryClient.invalidateQueries({ queryKey: ["user"] });
 		},
 	});
-
+	
 	const logout = () => {
 		googleLogout();
 		removeUserMutation.mutate();
 	};
+	
+	
+	
+	
 
 	return {
 		user,
