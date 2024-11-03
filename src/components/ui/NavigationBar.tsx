@@ -4,10 +4,10 @@ import { NavLink } from "react-router-dom";
 import { useUser } from "@/lib/useUser";
 
 export default function NavigationBar() {
-	const { logout, user } = useUser(); // Assuming useUser returns the current user state
+	const { logout, user } = useUser();
 
 	// Check if the user is logged in
-	const isLoggedIn = Boolean(user); // Change this according to how you check for logged-in status
+	const isLoggedIn = Boolean(user);
 
 	return (
 		// Render the navigation bar only if the user is logged in

@@ -10,5 +10,6 @@ export interface Course {
 	description: ReactNode;
 	course_id: string;
 	course_name: string;
+	description: string;
 	user_id: string;
 }
