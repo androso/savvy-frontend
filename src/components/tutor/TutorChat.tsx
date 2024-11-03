@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,21 @@ export default function TutorChat() {
 	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
 		course?.course_id ? true : false
 	);
+
+	const chatContainerRef = useRef<HTMLDivElement>(null);
+
+	const scrollToBottom = () => {
+		if (chatContainerRef.current) {
+			chatContainerRef.current.scrollTo({
+				top: chatContainerRef.current.scrollHeight,
+				behavior: "smooth",
+			});
+		}
+	};
+
+	useEffect(() => {
+		scrollToBottom();
+	}, [thread?.messages]);
 
 	useEffect(() => {
 		if (!thread?.messages[1]) {
@@ -175,7 +190,10 @@ export default function TutorChat() {
 	// Return the main chat interface only when we have a valid thread
 	return (
 		<div className="flex flex-col h-full bg-gray-100 items-center">
-			<div className="flex-1 overflow-auto p-6 h-full  w-full overflow-y-scroll">
+				<div 
+					ref={chatContainerRef}
+					className="flex-1 overflow-auto p-6 h-full w-full overflow-y-scroll"
+				>
 				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
 					{thread?.messages[0] && (
