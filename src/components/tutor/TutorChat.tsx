@@ -66,7 +66,7 @@ export default function TutorChat() {
 	}, [thread?.messages]);
 
 	useEffect(() => {
-		if (!thread?.messages[1]) {
+		if (!thread?.messages?.[1]) {
 			setShowSuggestedTopics(true);
 		} else {
 			setShowSuggestedTopics(false);
@@ -190,13 +190,13 @@ export default function TutorChat() {
 	// Return the main chat interface only when we have a valid thread
 	return (
 		<div className="flex flex-col h-full bg-gray-100 items-center">
-				<div 
-					ref={chatContainerRef}
-					className="flex-1 overflow-auto p-6 h-full w-full overflow-y-scroll"
-				>
+			<div
+				ref={chatContainerRef}
+				className="flex-1 overflow-auto p-6 h-full w-full overflow-y-scroll"
+			>
 				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
-					{thread?.messages[0] && (
+					{thread?.messages?.[0] && (
 						<NormalMessage
 							content={thread?.messages[0]?.content as any}
 							role="assistant"
@@ -224,23 +224,25 @@ export default function TutorChat() {
 					)}
 
 					{/* USER / TUTOR MESSAGES */}
-					{thread?.messages.slice(1)?.map((message, index) => {
-						const Component =
-							MessageComponent[message.type as keyof typeof MessageComponent];
+					{thread?.messages &&
+						thread.messages.length > 0 &&
+						thread.messages.slice(1).map((message, index) => {
+							const Component =
+								MessageComponent[message.type as keyof typeof MessageComponent];
 
-						if (!Component) {
-							console.warn(`Unknown message type: ${message.type}`);
-							return null;
-						}
+							if (!Component) {
+								console.warn(`Unknown message type: ${message.type}`);
+								return null;
+							}
 
-						return (
-							<Component
-								key={index}
-								role={message.role}
-								content={message.content as any}
-							/>
-						);
-					})}
+							return (
+								<Component
+									key={index}
+									role={message.role}
+									content={message.content as any}
+								/>
+							);
+						})}
 				</div>
 			</div>
 

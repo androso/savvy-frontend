@@ -25,9 +25,10 @@ type Thread = {
 	tool_resources: Array<any>;
 };
 
-const createThread = async () => {
-	console.log("requesting thread to backend");
-	const response = await axios.post("/api/assistants/threads");
+const createThread = async (courseName: string) => {
+	const response = await axios.post("/api/assistants/threads", {
+		course_name: courseName,
+	});
 	return response.data.data as Thread;
 };
 
@@ -67,7 +68,7 @@ export function useThread() {
 
 	// Mutation for creating new thread
 	const mutation = useMutation({
-		mutationFn: createThread,
+		mutationFn: () => createThread(location.state?.course?.course_name),
 		onMutate: () => {
 			operationInProgress.current = true;
 		},
