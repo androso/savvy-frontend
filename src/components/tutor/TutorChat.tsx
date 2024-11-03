@@ -204,6 +204,8 @@ export default function TutorChat() {
 							</div>
 						</div>
 					)}
+
+					{/* USER / TUTOR MESSAGES */}
 					{thread?.messages.slice(1)?.map((message, index) => {
 						const Component =
 							MessageComponent[message.type as keyof typeof MessageComponent];
@@ -212,7 +214,6 @@ export default function TutorChat() {
 							console.warn(`Unknown message type: ${message.type}`);
 							return null;
 						}
-						console.log({ message });
 
 						return (
 							<Component
@@ -222,46 +223,6 @@ export default function TutorChat() {
 							/>
 						);
 					})}
-					{/* USER / TUTOR MESSAGES */}
-					{/* {messages.slice(1).map((message, index) => {
-						if (message.type == "normal") {
-							const normalMessage = message as NormalMessageType;
-							return (
-								<NormalMessage
-									key={index}
-									content={normalMessage.content}
-									role={normalMessage.role}
-								/>
-							);
-						} else if (message.type == "list") {
-							const listMessage = message as ListTutorMessage;
-							return (
-								<ListMessage
-									key={index}
-									headerText={listMessage.content.headerText}
-									steps={listMessage.content.steps}
-								/>
-							);
-						} else if (message.type == "concept") {
-							const conceptMessage = message as ConceptMessageType;
-							return (
-								<ConceptMessage
-									content={conceptMessage.content.bodyText}
-									stepNumber={conceptMessage.content.step.order}
-									title={conceptMessage.content.step.title}
-								/>
-							);
-						} else if (message.type == "flashcard") {
-							const flashcardMessage = message as FlashcardMessageType;
-							return (
-								<FlashcardMessage
-									options={flashcardMessage.content.options}
-									question={flashcardMessage.content.question}
-									correctOption={flashcardMessage.content.correctOption}
-								/>
-							);
-						}
-					})} */}
 				</div>
 			</div>
 

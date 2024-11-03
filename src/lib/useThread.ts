@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { axios } from "./utils";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+	useLocation,
+	useNavigate,
+	useParams,
+	useSearchParams,
+} from "react-router-dom";
 import { ListContent } from "@/components/tutor/ListMessage";
 
 type ThreadMessage = {
@@ -46,11 +51,16 @@ export function useThread() {
 	const queryClient = useQueryClient();
 	const operationInProgress = useRef(false);
 	const location = useLocation();
+	const [searchParams] = useSearchParams();
 
 	// Query for existing thread
 	const { data: existingThread, isLoading: isLoadingExisting } = useQuery({
 		queryKey: ["thread", threadId],
-		queryFn: () => fetchThread(threadId!, location.state?.course?.course_name),
+		queryFn: () =>
+			fetchThread(
+				threadId!,
+				location.state?.course?.course_name ?? searchParams.get("course_name")
+			),
 		enabled: !!threadId,
 		staleTime: Infinity, // Prevent unnecessary refetches
 	});
