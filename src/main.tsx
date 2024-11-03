@@ -25,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
 							<Routes>
 								<Route path="/" element={<App />} />
 								<Route path="/tutor" element={<TutorChat />} />
+								<Route path="/tutor/:threadId" element={<TutorChat />} />
 								<Route path="/review" element={<Review />} />
 								<Route path="/notes" element={<Notes />} />
 								<Route path="/login" element={<Login />} />
