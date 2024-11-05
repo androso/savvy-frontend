@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { ListContent } from "@/components/tutor/ListMessage";
 import { Step } from "@/components/tutor/types";
+import { ConceptContent } from "@/components/tutor/ConceptMessage";
 
 type ThreadMessage = {
 	type: "normal" | "list" | "concept" | "eli5" | "flashcard" | "detail";
@@ -26,16 +27,16 @@ type Thread = {
 	tool_resources: Array<any>;
 };
 
-interface ConceptMessageContent {
-	step_number: number;
-	title: string;
-	explanation: string;
-}
-
 interface ConceptMessageResponse {
 	type: "concept";
 	role: "assistant";
-	content: ConceptMessageContent;
+	content: ConceptContent;
+}
+
+interface Eli5MessageResponse {
+	type: "eli5";
+	role: "assistant";
+	content: string;
 }
 
 const createThread = async (courseName: string) => {
@@ -163,9 +164,36 @@ export function useThread() {
 		}
 	};
 
+	const getEli5 = async (step: Step, explanation: string) => {
+		try {
+			const response = await axios.post<{ data: Eli5MessageResponse }>(
+				`/api/assistants/threads/${thread?.id}/messages`,
+				{
+					stepTitle: step.title,
+					messageType: "eli5",
+					stepNumber: step.order,
+					explanation,
+				}
+			);
+
+			// Update messages in thread
+			if (thread) {
+				const eli5Message: Eli5MessageResponse = response.data.data;
+				queryClient.setQueryData(["thread", thread.id], {
+					...thread,
+					messages: [...thread.messages, eli5Message],
+				});
+			}
+		} catch (error) {
+			//todo: implement error handling
+			console.error("Failed to get ELI5 explanation:", error);
+		}
+	};
+
 	return {
 		thread,
 		getStepExplanation,
+		getEli5,
 		isLoading: (isLoadingExisting || mutation.isPending) && !thread,
 		error: mutation.error
 			? {
