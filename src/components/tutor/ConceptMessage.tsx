@@ -1,6 +1,6 @@
 import { Card } from "../ui/card";
 
-type ConceptContent = {
+export type ConceptContent = {
 	stepNumber: number;
 	title: string;
 	explanation: string;
