@@ -38,6 +38,11 @@ interface Eli5MessageResponse {
 	role: "assistant";
 	content: string;
 }
+interface DetailedExplanation {
+	type: "detail";
+	role: "assistant";
+	content: string;
+}
 
 const createThread = async (courseName: string) => {
 	const response = await axios.post("/api/assistants/threads", {
@@ -164,7 +169,7 @@ export function useThread() {
 		}
 	};
 
-	const getEli5 = async (step: Step, explanation: string) => {
+	const getEli5 = async (step: Step, concept: string) => {
 		try {
 			const response = await axios.post<{ data: Eli5MessageResponse }>(
 				`/api/assistants/threads/${thread?.id}/messages`,
@@ -172,7 +177,7 @@ export function useThread() {
 					stepTitle: step.title,
 					messageType: "eli5",
 					stepNumber: step.order,
-					explanation,
+					concept,
 				}
 			);
 
@@ -190,10 +195,37 @@ export function useThread() {
 		}
 	};
 
+	const getDetailedExplanation = async (step: Step, concept: string) => {
+		try {
+			const response = await axios.post<{ data: DetailedExplanation }>(
+				`/api/assistants/threads/${thread?.id}/messages`,
+				{
+					stepTitle: step.title,
+					messageType: "detail",
+					stepNumber: step.order,
+					concept,
+				}
+			);
+
+			// Update messages in thread
+			if (thread) {
+				const detailMessage: DetailedExplanation = response.data.data;
+				queryClient.setQueryData(["thread", thread.id], {
+					...thread,
+					messages: [...thread.messages, detailMessage],
+				});
+			}
+		} catch (error) {
+			//todo: implement error handling
+			console.error("Failed to get detailed explanation:", error);
+		}
+	};
+
 	return {
 		thread,
 		getStepExplanation,
 		getEli5,
+		getDetailedExplanation,
 		isLoading: (isLoadingExisting || mutation.isPending) && !thread,
 		error: mutation.error
 			? {
