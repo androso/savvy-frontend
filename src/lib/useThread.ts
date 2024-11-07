@@ -132,7 +132,6 @@ const api = {
 		if (thread.metadata) {
 			thread.metadata = parseThreadMetadata(thread.metadata as ThreadMetadata);
 		}
-		console.log({ thread }, "usethread");
 		return thread;
 	},
 
@@ -141,6 +140,7 @@ const api = {
 			`/api/assistants/threads/${threadId}/messages`,
 			request
 		);
+		
 		return response.data.data;
 	},
 

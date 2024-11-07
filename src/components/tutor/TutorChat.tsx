@@ -24,6 +24,7 @@ const MessageComponent = {
 	normal: NormalMessage,
 	list: ListMessage,
 	concept: ConceptMessage,
+	eli5: ConceptMessage,
 	// flashcard: FlashcardMessage,
 } as const;
 
@@ -33,6 +34,10 @@ interface StepActions {
 	moreDetail: boolean;
 }
 
+// TODO: now make generate flashcard and more detail work
+// TODO: apparently we can't store a lot of info in metadata at openai
+// TODO: it's returning an error saying that the steps are too long.
+// why not make it work for now and then we can think about how to store the steps
 export default function TutorChat() {
 	const location = useLocation();
 	const { threadId } = useParams();
@@ -299,6 +304,11 @@ export default function TutorChat() {
 						const Component =
 							MessageComponent[message.type as keyof typeof MessageComponent];
 						if (!Component) return null;
+
+						if (message.type === "eli5") {
+							//@ts-ignore
+							message.content.stepTitle = "Simplificación";
+						}
 
 						return (
 							<Component
