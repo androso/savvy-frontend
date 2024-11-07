@@ -2,7 +2,7 @@ import { Card } from "../ui/card";
 
 export type ConceptContent = {
 	stepNumber: number;
-	title: string;
+	stepTitle: string;
 	explanation: string;
 };
 
@@ -19,7 +19,7 @@ export default function ConceptMessage({
 						{content.stepNumber}
 					</span>
 				</div>
-				<h2 className="text-xl font-bold flex-grow">{content.title}</h2>
+				<h2 className="text-xl font-bold flex-grow">{content.stepTitle}</h2>
 			</div>
 			<hr className="border-t border-gray-200 mb-4" />
 			<p className="text-gray-700 leading-relaxed">{content.explanation}</p>
