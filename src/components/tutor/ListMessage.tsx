@@ -1,12 +1,16 @@
 import { Card } from "../ui/card";
 import { Step } from "./types";
 
-export default function ListMessage({
-	headerText,
-	steps,
-}: {
+export type ListContent = {
 	headerText: string;
 	steps: Step[];
+};
+
+export default function ListMessage({
+	content,
+}: {
+	content: ListContent;
+	role: string;
 }) {
 	return (
 		<Card className="mb-4 p-4 bg-white">
@@ -14,9 +18,9 @@ export default function ListMessage({
 				<div className="w-4 h-4 bg-red-600 rounded-full mr-2"></div>
 				<span className="font-semibold">Gizmo</span>
 			</div>
-			<p className="whitespace-pre-wrap">{headerText}</p>
+			<p className="whitespace-pre-wrap">{content.headerText}</p>
 			<div className="space-y-2">
-				{steps.map((step) => (
+				{content.steps?.map((step) => (
 					<div
 						key={step.order}
 						className="flex items-start bg-gray-50 rounded-md p-3 mt-3"
