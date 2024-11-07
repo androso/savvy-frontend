@@ -14,7 +14,6 @@ import {
 	Step,
 } from "./types";
 import { useThread } from "@/lib/useThread";
-import { axios } from "@/lib/utils";
 import FlashcardMessage from "./FlashcardMessage";
 import ListMessage from "./ListMessage";
 import NormalMessage from "./NormalMessage";
@@ -24,7 +23,7 @@ import ConceptMessage from "./ConceptMessage";
 const MessageComponent = {
 	normal: NormalMessage,
 	list: ListMessage,
-	// concept: ConceptMessage,
+	concept: ConceptMessage,
 	// flashcard: FlashcardMessage,
 } as const;
 
@@ -34,146 +33,156 @@ interface StepActions {
 	moreDetail: boolean;
 }
 
-// TODO: after a user clicks on a topic or writes the first message, ask the backend for a list of steps to understand the concept
-// TODO: start learning button should start the session, ask the backend for the explanation of the first step
-// TODO: render the first explanation, with three buttons (eli5, gen flash, expand) (three mutations)
-
-// TODO: Mutations:
-//			generateListOfSteps,
-// 			generateConceptExplanation(step) -- step has order and title
-// 	     Concept is the stept_title + explanation
-//			getEli5(concept),
-//			getFlashcard(concept)
-//   	    expandExplanation(concept)
 export default function TutorChat() {
 	const location = useLocation();
 	const { threadId } = useParams();
-	const course: Course = location.state?.course;
 	const navigate = useNavigate();
-	const { thread, isLoading, error, getStepsList } = useThread();
-	const [input, setInput] = useState("");
-	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
-	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
-		course?.course_id ? true : false
-	);
+	const chatContainerRef = useRef<HTMLDivElement>(null);
 
-	// messages state thread.messages
-	// steps state
-	const [steps, setSteps] = useState<Step[]>([]);
-	// currentStep state
+	const course: Course = location.state?.course;
+	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
+
+	// Thread state and actions
+	const {
+		thread,
+		getStepsList,
+		getStepExplanation,
+		getEli5,
+		getDetailedExplanation,
+		isLoading,
+		isMessageLoading,
+		error,
+		messageError,
+	} = useThread();
+
+	// Local state
+	const [input, setInput] = useState("");
+	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
+		!!course?.course_id
+	);
+	const [sessionSteps, setSessionSteps] = useState<Step[]>([]);
 	const [currentStep, setCurrentStep] = useState<Step | null>(null);
-	// has the session started? state
 	const [sessionStarted, setSessionStarted] = useState(false);
-	// what actions have been used for the current step?
 	const [stepActions, setStepActions] = useState<StepActions>({
 		eli5: false,
 		flashcard: false,
 		moreDetail: false,
 	});
 
-	// Handle no course data
+	// Scroll to bottom effect
 	useEffect(() => {
-		if (!course && !threadId) {
-			navigate("/");
-		}
-	}, [course, threadId]);
-
-	const chatContainerRef = useRef<HTMLDivElement>(null);
-
-	const scrollToBottom = () => {
 		if (chatContainerRef.current) {
 			chatContainerRef.current.scrollTo({
 				top: chatContainerRef.current.scrollHeight,
 				behavior: "smooth",
 			});
 		}
-	};
+	}, [thread?.messages, isMessageLoading]);
 
+	// Show suggested topics if no messages
 	useEffect(() => {
-		scrollToBottom();
+		setShowSuggestedTopics(!thread?.messages?.[1]);
 	}, [thread?.messages]);
 
-	// shows suggested topics if there are no messages
+	// Redirect if no course
 	useEffect(() => {
-		if (!thread?.messages?.[1]) {
-			setShowSuggestedTopics(true);
-		} else {
-			setShowSuggestedTopics(false);
+		if (!course && !threadId) {
+			navigate("/");
 		}
-	}, [thread]);
+	}, [course, threadId, navigate]);
 
-	// todo: write a function that starts the session
-	// 		modifies the session state to started
-	// 		perform the mutation to get the first step explanation
+	// Session management functions
+	const startSession = async () => {
+		if (!sessionSteps.length || sessionStarted) return;
 
-	// todo: write a function that gets the learning actions that haven't been used
+		setSessionStarted(true);
+		setCurrentStep(sessionSteps[0]);
 
-	// todo: write a function that handles when the user clicks on an action
-	// 		call mutation with the action type and the concept (step)
+		try {
+			await getStepExplanation(
+				sessionSteps[0],
+				thread?.messages?.[1]?.content as string
+			);
+			setStepActions({ eli5: false, flashcard: false, moreDetail: false });
+		} catch (error) {
+			console.error("Failed to start session:", error);
+		}
+	};
 
-	// todo: write a function that will handle the user clicking on "next step"
-	// 		make a call to the backend to get an explanation of the next step
-	// 		modify the session state to the next step
+	const getAvailableActions = (): string[] => {
+		const actions = [];
+		if (!stepActions.eli5) actions.push("eli5");
+		if (!stepActions.flashcard) actions.push("flashcard");
+		if (!stepActions.moreDetail) actions.push("moreDetail");
+		return actions;
+	};
 
-	const handleSendMessage = async () => {
-		// if (!input.trim() || !thread) return;
-		// const isFirstMessage =
-		// 	messages.filter((m) => m.role === "user").length === 0;
-		// const currentInput = input;
-		// // Add user message
-		// setMessages((prev) => [
-		// 	...prev,
-		// 	{
-		// 		role: "user",
-		// 		type: "normal",
-		// 		content: currentInput,
-		// 	},
-		// ]);
-		// setInput("");
-		// try {
-		// 	// Show loading state
-		// 	setMessages((prev) => [
-		// 		...prev,
-		// 		{
-		// 			role: "assistant",
-		// 			type: "normal",
-		// 			content: "Processing your request...",
-		// 		},
-		// 	]);
-		// 	if (isFirstMessage) {
-		// 		const response = await axios.post(
-		// 			`/api/assistant/threads/${thread.id}/messages`,
-		// 			{
-		// 				content: currentInput,
-		// 				messageType: "list",
-		// 			}
-		// 		);
-		// 		// Remove loading message and add response
-		// 		setMessages((prev) => [
-		// 			...prev.filter((m) => m.content !== "Processing your request..."),
-		// 			response.data,
-		// 		]);
-		// 	}
-		// } catch (err) {
-		// 	console.error("Error processing message:", err);
-		// 	setMessages((prev) => [
-		// 		...prev.filter((m) => m.content !== "Processing your request..."),
-		// 		{
-		// 			role: "assistant",
-		// 			type: "normal",
-		// 			content: "Sorry, there was an error processing your request.",
-		// 		},
-		// 	]);
-		// }
+	const handleActionClick = async (action: keyof StepActions) => {
+		if (!currentStep || !thread) return;
+
+		try {
+			switch (action) {
+				case "eli5":
+					await getEli5(currentStep, currentStep.title);
+					break;
+				case "moreDetail":
+					await getDetailedExplanation(currentStep, currentStep.title);
+					break;
+				// Add flashcard case when implemented
+			}
+
+			setStepActions((prev) => ({ ...prev, [action]: true }));
+		} catch (error) {
+			console.error(`Failed to execute ${action}:`, error);
+		}
+	};
+
+	const handleNextStep = async () => {
+		if (!currentStep || !sessionSteps.length) return;
+
+		const nextStepIndex =
+			sessionSteps.findIndex((step) => step.order === currentStep.order) + 1;
+		if (nextStepIndex < sessionSteps.length) {
+			const nextStep = sessionSteps[nextStepIndex];
+			setCurrentStep(nextStep);
+			setStepActions({ eli5: false, flashcard: false, moreDetail: false });
+
+			try {
+				await getStepExplanation(
+					nextStep,
+					thread?.messages?.[1]?.content as string
+				);
+			} catch (error) {
+				console.error("Failed to get next step explanation:", error);
+			}
+		}
 	};
 
 	const handleTopicClick = async (topic: string) => {
-		await getStepsList(topic);
+		try {
+			const message = await getStepsList(topic);
+			if (
+				message &&
+				typeof message.content !== "string" &&
+				"steps" in message.content
+			) {
+				setSessionSteps(message.content.steps);
+				setShowSuggestedTopics(false);
+			}
+		} catch (error) {
+			console.error("Failed to get steps list:", error);
+		}
 	};
 
-	if (isLoading) {
-		return <LoadingSpinner />;
-	}
+	const handleSendMessage = async () => {
+		if (!input.trim() || !thread) return;
+
+		const topic = input.trim();
+		setInput("");
+		await handleTopicClick(topic);
+	};
+
+	if (isLoading) return <LoadingSpinner />;
 
 	if (error || !thread) {
 		return (
@@ -182,77 +191,120 @@ export default function TutorChat() {
 					<CardTitle className="text-red-600 mb-4">Error</CardTitle>
 					<p className="text-gray-700">
 						{error?.message ||
-							"Lo sentimos, no pudimos iniciar tu sesión de tutoría. Por favor, intenta de nuevo más tarde."}
+							"Sorry, we couldn't start your tutoring session. Please try again later."}
 					</p>
 					<Button className="mt-4" onClick={() => navigate("/")}>
-						Volver al inicio
+						Back to Home
 					</Button>
 				</Card>
 			</div>
 		);
 	}
 
-	// Return the main chat interface only when we have a valid thread
 	return (
 		<div className="flex flex-col h-full bg-gray-100 items-center">
 			<div
 				ref={chatContainerRef}
 				className="flex-1 overflow-auto p-6 h-full w-full overflow-y-scroll"
 			>
-				{/* CHAT DISPLAY WINDOW */}
 				<div className="max-w-2xl mx-auto pb-10">
-					{thread?.messages?.[0] && (
+					{/* Welcome Message */}
+					{thread.messages?.[0] && (
 						<NormalMessage
-							content={thread?.messages[0]?.content as any}
+							content={thread.messages[0].content as string}
 							role="assistant"
 						/>
 					)}
 
-					{/* Conditionally render suggested topics */}
+					{/* Suggested Topics */}
 					{showSuggestedTopics && (
 						<div className="mt-6">
 							<h2 className="text-lg font-semibold mb-4">Suggested topics</h2>
 							<div className="flex flex-wrap gap-3">
-								{suggestedTopics &&
-									suggestedTopics?.map((topic, index) => (
-										<Button
-											key={index}
-											variant={"outline"}
-											className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
-											onClick={() => handleTopicClick(topic)}
-										>
-											{topic}
-										</Button>
-									))}
+								{suggestedTopics?.map((topic, index) => (
+									<Button
+										key={index}
+										variant="outline"
+										className="justify-start text-left h-auto py-2 px-3 flex-[0_1_auto] min-w-[40%] max-w-full border border-gray-500"
+										onClick={() => handleTopicClick(topic)}
+										disabled={isMessageLoading}
+									>
+										{topic}
+									</Button>
+								))}
 							</div>
 						</div>
 					)}
 
-					{/* USER / TUTOR MESSAGES */}
-					{thread?.messages &&
-						thread.messages.length > 0 &&
-						thread.messages.slice(1).map((message, index) => {
-							const Component =
-								MessageComponent[message.type as keyof typeof MessageComponent];
+					{/* Messages */}
+					{thread.messages?.slice(1).map((message, index) => {
+						const Component =
+							MessageComponent[message.type as keyof typeof MessageComponent];
+						if (!Component) return null;
 
-							if (!Component) {
-								console.warn(`Unknown message type: ${message.type}`);
-								return null;
-							}
+						return (
+							<Component
+								key={index}
+								role={message.role}
+								content={message.content as any}
+							/>
+						);
+					})}
 
-							return (
-								<Component
-									key={index}
-									role={message.role}
-									content={message.content as any}
-								/>
-							);
-						})}
+					{/* Session Controls */}
+					{sessionSteps.length > 0 && !sessionStarted && (
+						<div className="mt-4">
+							<Button
+								onClick={startSession}
+								disabled={isMessageLoading}
+								className="w-full"
+							>
+								Start Learning Session
+							</Button>
+						</div>
+					)}
+
+					{/* Step Actions */}
+					{sessionStarted && currentStep && (
+						<div className="mt-4 space-y-2">
+							{getAvailableActions().map((action) => (
+								<Button
+									key={action}
+									onClick={() => handleActionClick(action as keyof StepActions)}
+									disabled={isMessageLoading}
+									className="mr-2"
+								>
+									{action === "eli5"
+										? "Explain Like I'm 5"
+										: action === "flashcard"
+										? "Generate Flashcard"
+										: "More Detail"}
+								</Button>
+							))}
+
+							{currentStep.order < sessionSteps.length && (
+								<Button
+									onClick={handleNextStep}
+									disabled={isMessageLoading}
+									className="w-full mt-4"
+								>
+									Next Step
+								</Button>
+							)}
+						</div>
+					)}
+
+					{/* Loading State */}
+					{isMessageLoading && (
+						<div className="mt-4 text-center">
+							<LoadingSpinner />
+						</div>
+					)}
 				</div>
 			</div>
 
-			{/*  USER INPUT BOX */}
-			<div className="fixed bottom-[69px] bg-white  p-4 shadow-md w-full max-w-2xl mx-auto ">
+			{/* Input Box */}
+			<div className="fixed bottom-[69px] bg-white p-4 shadow-md w-full max-w-2xl mx-auto">
 				<div className="flex items-center">
 					<label htmlFor="file-upload" className="mr-2">
 						<Button
@@ -270,7 +322,6 @@ export default function TutorChat() {
 						id="file-upload"
 						type="file"
 						className="hidden"
-						// onChange={(event) => handleFileUpload(event)}
 						aria-label="File upload"
 					/>
 					<Input
@@ -279,8 +330,13 @@ export default function TutorChat() {
 						onChange={(e) => setInput(e.target.value)}
 						onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
 						className="flex-1"
+						disabled={isMessageLoading}
 					/>
-					<Button onClick={handleSendMessage} className="ml-2">
+					<Button
+						onClick={handleSendMessage}
+						className="ml-2"
+						disabled={isMessageLoading}
+					>
 						<ArrowUpIcon className="h-4 w-4" />
 					</Button>
 				</div>
