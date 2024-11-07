@@ -27,6 +27,12 @@ type Thread = {
 	tool_resources: Array<any>;
 };
 
+interface StepsListResponse {
+	type: "list";
+	role: "assistant";
+	content: ListContent;
+}
+
 interface ConceptMessageResponse {
 	type: "concept";
 	role: "assistant";
@@ -142,7 +148,7 @@ export function useThread() {
 	// Single source of truth for thread data
 	const thread = existingThread ?? mutation.data;
 
-	// todo: write a function that returns (concept explanation | eli5 | flashcard | detail) based on the step
+	// todo: write a function that returns flashcard based on the step
 	// modify the messages based on the returned value
 	const getStepExplanation = async (step: Step): Promise<void> => {
 		try {
@@ -210,6 +216,7 @@ export function useThread() {
 			// Update messages in thread
 			if (thread) {
 				const detailMessage: DetailedExplanation = response.data.data;
+
 				queryClient.setQueryData(["thread", thread.id], {
 					...thread,
 					messages: [...thread.messages, detailMessage],
@@ -221,11 +228,46 @@ export function useThread() {
 		}
 	};
 
+	const getStepsList = async (topic: string) => {
+		if (!thread) return;
+
+		try {
+			const userMessage: ThreadMessage = {
+				role: "user",
+				type: "normal",
+				content: topic,
+			};
+			queryClient.setQueryData(["thread", thread.id], {
+				...thread,
+				messages: [...thread.messages, userMessage],
+			});
+
+			const response = await axios.post<{ data: StepsListResponse }>(
+				`/api/assistants/threads/${thread.id}/messages`,
+				{
+					content: topic,
+					messageType: "list",
+				}
+			);
+
+			const stepsMessage: StepsListResponse = response.data.data;
+
+			queryClient.setQueryData(["thread", thread.id], {
+				...thread,
+				messages: [...thread.messages, userMessage, stepsMessage],
+			});
+		} catch (e) {
+			//todo: implement error handling
+			console.error("Failed to get steps list:", e);
+		}
+	};
+
 	return {
 		thread,
 		getStepExplanation,
 		getEli5,
 		getDetailedExplanation,
+		getStepsList,
 		isLoading: (isLoadingExisting || mutation.isPending) && !thread,
 		error: mutation.error
 			? {
