@@ -8,7 +8,7 @@ import {
 	useSearchParams,
 } from "react-router-dom";
 import { ListContent } from "@/components/tutor/ListMessage";
-import { Step } from "@/components/tutor/types";
+import { SessionUpdateRequest, Step } from "@/components/tutor/types";
 import { ConceptContent } from "@/components/tutor/ConceptMessage";
 
 // Types for API responses
@@ -92,6 +92,21 @@ type MessageRequest =
 
 type ThreadMessageRequest = MessageRequest & { threadId: string };
 
+type ThreadMetadata = {
+	sessionStarted: string;
+	currentStep: string;
+	sessionSteps: string;
+	stepActions: string;
+};
+const parseThreadMetadata = (metadata: ThreadMetadata) => {
+	return {
+		sessionStarted: metadata.sessionStarted === "true",
+		currentStep:
+			metadata.currentStep === "null" ? null : JSON.parse(metadata.currentStep),
+		sessionSteps: JSON.parse(metadata.sessionSteps),
+		stepActions: JSON.parse(metadata.stepActions),
+	};
+};
 // API functions
 const api = {
 	createThread: async (courseName: string) => {
@@ -113,13 +128,27 @@ const api = {
 		const response = await axios.get<ThreadResponse>(
 			`/api/assistants/threads/${threadId}?${params.toString()}`
 		);
-		return response.data.data;
+		const thread = response.data.data;
+		if (thread.metadata) {
+			thread.metadata = parseThreadMetadata(thread.metadata as ThreadMetadata);
+		}
+		console.log({ thread }, "usethread");
+		return thread;
 	},
 
 	postMessage: async (threadId: string, request: MessageRequest) => {
 		const response = await axios.post<MessageResponse>(
 			`/api/assistants/threads/${threadId}/messages`,
 			request
+		);
+		return response.data.data;
+	},
+
+	updateSession: async (request: SessionUpdateRequest) => {
+		const { threadId, ...data } = request;
+		const response = await axios.patch<ThreadResponse>(
+			`/api/assistants/threads/${threadId}/session`,
+			data
 		);
 		return response.data.data;
 	},
@@ -149,6 +178,11 @@ export function useThread() {
 		mutationFn: () => api.createThread(courseName ?? ""),
 		onSuccess: (newThread) => {
 			if (newThread?.id) {
+				if (newThread?.metadata) {
+					newThread.metadata = parseThreadMetadata(
+						newThread.metadata as ThreadMetadata
+					);
+				}
 				queryClient.setQueryData(["thread", newThread.id], newThread);
 
 				const queryString = courseName ? `?course_name=${courseName}` : "";
@@ -157,6 +191,16 @@ export function useThread() {
 					state: { course: location.state?.course },
 				});
 			}
+		},
+	});
+
+	const updateSessionMutation = useMutation({
+		mutationFn: async (request: SessionUpdateRequest) => {
+			await api.updateSession(request);
+			return api.fetchThread(request.threadId) as any;
+		},
+		onSuccess: (thread, variables) => {
+			queryClient.setQueryData<Thread>(["thread", variables.threadId], thread);
 		},
 	});
 
@@ -282,5 +326,6 @@ export function useThread() {
 			: null,
 		isMessageLoading: postMessageMutation.isPending,
 		messageError: postMessageMutation.error,
+		updateSession: updateSessionMutation.mutateAsync,
 	};
 }
