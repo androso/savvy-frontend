@@ -11,11 +11,19 @@ import { ListContent } from "@/components/tutor/ListMessage";
 import { Step } from "@/components/tutor/types";
 import { ConceptContent } from "@/components/tutor/ConceptMessage";
 
+// Types for API responses
+interface ThreadResponse {
+	data: Thread;
+}
+
+interface MessageResponse {
+	data: ThreadMessage;
+}
+
 type ThreadMessage = {
 	type: "normal" | "list" | "concept" | "eli5" | "flashcard" | "detail";
 	role: "user" | "assistant";
-	content: string | ListContent;
-	stepNumber?: number;
+	content: string | ListContent | ConceptContent;
 };
 
 type Thread = {
@@ -27,48 +35,94 @@ type Thread = {
 	tool_resources: Array<any>;
 };
 
-interface StepsListResponse {
-	type: "list";
-	role: "assistant";
-	content: ListContent;
-}
+// Request types for different message types
+// interface BaseMessageRequest {
+// 	messageType: string;
+// 	stepTitle?: string;
+// 	stepNumber?: number;
+// 	concept?: string;
+// }
 
-interface ConceptMessageResponse {
-	type: "concept";
-	role: "assistant";
-	content: ConceptContent;
-}
+// interface StepsListRequest extends BaseMessageRequest {
+// 	messageType: "list";
+// 	// content: string;
+// 	topic: string;
+// }
 
-interface Eli5MessageResponse {
-	type: "eli5";
-	role: "assistant";
-	content: string;
-}
-interface DetailedExplanation {
-	type: "detail";
-	role: "assistant";
-	content: string;
-}
+// interface ConceptRequest extends BaseMessageRequest {
+// 	messageType: "concept";
+// 	stepTitle: string;
+// 	stepNumber: number;
+// }
 
-const createThread = async (courseName: string) => {
-	const response = await axios.post("/api/assistants/threads", {
-		course_name: courseName,
-	});
-	return response.data.data as Thread;
-};
+// interface Eli5Request extends BaseMessageRequest {
+// 	messageType: "eli5";
+// 	stepTitle: string;
+// 	stepNumber: number;
+// 	concept: string;
+// }
 
-const fetchThread = async (threadId: string, courseName: string) => {
-	if (!threadId) return null;
-	const params = new URLSearchParams();
-	if (courseName) {
-		params.set("course_name", courseName);
-	}
+// interface DetailRequest extends BaseMessageRequest {
+// 	messageType: "detail";
+// 	stepTitle: string;
+// 	stepNumber: number;
+// 	concept: string;
+// }
 
-	const response = await axios.get(
-		`/api/assistants/threads/${threadId}?${params.toString()}`
-	);
+type MessageRequest =
+	| { messageType: "list"; topic: string }
+	| {
+			messageType: "concept";
+			stepTitle: string;
+			stepNumber: number;
+			topic: string;
+	  }
+	| {
+			messageType: "eli5";
+			stepTitle: string;
+			stepNumber: number;
+			concept: string;
+	  }
+	| {
+			messageType: "detail";
+			stepTitle: string;
+			stepNumber: number;
+			concept: string;
+	  };
 
-	return response.data.data as Thread;
+type ThreadMessageRequest = MessageRequest & { threadId: string };
+
+// API functions
+const api = {
+	createThread: async (courseName: string) => {
+		const response = await axios.post<ThreadResponse>(
+			"/api/assistants/threads",
+			{
+				course_name: courseName,
+			}
+		);
+		return response.data.data;
+	},
+
+	fetchThread: async (threadId: string, courseName?: string | null) => {
+		if (!threadId) return null;
+		const params = new URLSearchParams();
+		if (courseName) {
+			params.set("course_name", courseName);
+		}
+		const response = await axios.get<ThreadResponse>(
+			`/api/assistants/threads/${threadId}?${params.toString()}`
+		);
+		return response.data.data;
+	},
+
+	postMessage: async (threadId: string, request: MessageRequest) => {
+		const response = await axios.post<MessageResponse>(
+			`/api/assistants/threads/${threadId}/messages`,
+			request
+		);
+		return response.data.data;
+	},
 };
 
 export function useThread() {
@@ -79,196 +133,137 @@ export function useThread() {
 	const location = useLocation();
 	const [searchParams] = useSearchParams();
 
-	// Query to get an existing thread
-	const { data: existingThread, isLoading: isLoadingExisting } = useQuery({
+	const courseName =
+		location.state?.course?.course_name ?? searchParams.get("course_name");
+
+	// Query to fetch existing thread
+	const { data: thread, isLoading: isLoadingExisting } = useQuery({
 		queryKey: ["thread", threadId],
-		queryFn: () =>
-			fetchThread(
-				threadId!,
-				location.state?.course?.course_name ?? searchParams.get("course_name")
-			),
+		queryFn: () => api.fetchThread(threadId!, courseName),
 		enabled: !!threadId,
-		staleTime: Infinity, // Prevent unnecessary refetches
+		staleTime: Infinity,
 	});
 
-	// Mutation to create a new thread
-	const mutation = useMutation({
-		mutationFn: () => createThread(location.state?.course?.course_name),
-		onMutate: () => {
-			operationInProgress.current = true;
-		},
-		onSuccess: (thread) => {
-			if (thread?.id) {
-				const course = location.state?.course;
-				queryClient.setQueryData(["thread", thread.id], thread);
+	// Mutation to create new thread
+	const createThreadMutation = useMutation({
+		mutationFn: () => api.createThread(courseName ?? ""),
+		onSuccess: (newThread) => {
+			if (newThread?.id) {
+				queryClient.setQueryData(["thread", newThread.id], newThread);
 
-				const searchParams = new URLSearchParams();
-				if (course?.course_name) {
-					searchParams.set("course_name", course.course_name);
-				}
-				const queryString = searchParams.toString()
-					? `?${searchParams.toString()}`
-					: "";
-
-				navigate(`/tutor/${thread.id}${queryString}`, {
+				const queryString = courseName ? `?course_name=${courseName}` : "";
+				navigate(`/tutor/${newThread.id}${queryString}`, {
 					replace: true,
-					state: {
-						course: location.state?.course,
-					},
+					state: { course: location.state?.course },
 				});
 			}
 		},
-		onSettled: () => {
-			operationInProgress.current = false;
+	});
+
+	// Generic mutation for posting messages
+	const postMessageMutation = useMutation({
+		mutationFn: (request: ThreadMessageRequest) => {
+			const { threadId, ...messageRequest } = request;
+			return api.postMessage(threadId, messageRequest);
+		},
+		onSuccess: (message, variables) => {
+			queryClient.setQueryData<Thread>(
+				["thread", variables.threadId],
+				(oldThread) => {
+					if (!oldThread) return oldThread;
+					return {
+						...oldThread,
+						messages: [...oldThread.messages, message],
+					};
+				}
+			);
 		},
 	});
 
+	// Helper function to add user message to thread
+	const addUserMessage = (threadId: string, content: string) => {
+		queryClient.setQueryData<Thread>(["thread", threadId], (oldThread) => {
+			if (!oldThread) return oldThread;
+			return {
+				...oldThread,
+				messages: [
+					...oldThread.messages,
+					{ role: "user", type: "normal", content },
+				],
+			};
+		});
+	};
+
+	// Message-specific mutation handlers
+	const getStepsList = async (topic: string) => {
+		if (!thread?.id) return;
+
+		addUserMessage(thread.id, topic);
+
+		return postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "list",
+			topic: topic,
+		});
+	};
+
+	const getStepExplanation = async (step: Step, topic: string) => {
+		if (!thread?.id) return;
+
+		return postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "concept",
+			stepTitle: step.title,
+			stepNumber: step.order,
+			topic,
+		});
+	};
+
+	const getEli5 = async (step: Step, concept: string) => {
+		if (!thread?.id) return;
+
+		return postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "eli5",
+			stepTitle: step.title,
+			stepNumber: step.order,
+			concept,
+		});
+	};
+
+	const getDetailedExplanation = async (step: Step, concept: string) => {
+		if (!thread?.id) return;
+
+		return postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "detail",
+			stepTitle: step.title,
+			stepNumber: step.order,
+			concept,
+		});
+	};
+
+	// Create thread effect
 	useEffect(() => {
 		const createNewThread = async () => {
-			if (!threadId && !operationInProgress.current && !existingThread) {
+			if (!threadId && !operationInProgress.current && !thread) {
+				operationInProgress.current = true;
 				try {
-					operationInProgress.current = true;
-					await mutation.mutateAsync();
+					await createThreadMutation.mutateAsync();
 				} catch (error) {
 					console.error("Failed to create thread:", error);
+				} finally {
+					operationInProgress.current = false;
 				}
 			}
 		};
 
-		// IIFE to handle async operation
-		(async () => {
-			await createNewThread();
-		})();
+		createNewThread();
 
 		return () => {
 			operationInProgress.current = false;
 		};
-	}, [threadId, existingThread]);
-
-	// Single source of truth for thread data
-	const thread = existingThread ?? mutation.data;
-
-	// todo: write a function that returns flashcard based on the step
-	// modify the messages based on the returned value
-	const getStepExplanation = async (step: Step): Promise<void> => {
-		try {
-			const response = await axios.post<{ data: ConceptMessageResponse }>(
-				`/api/assistants/threads/${thread?.id}/messages`,
-				{
-					stepTitle: step.title,
-					messageType: "concept",
-					stepNumber: step.order,
-				}
-			);
-
-			// Update messages in thread
-			if (thread) {
-				const conceptMessage: ConceptMessageResponse = response.data.data;
-				queryClient.setQueryData(["thread", thread.id], {
-					...thread,
-					messages: [...thread.messages, conceptMessage],
-				});
-			}
-		} catch (error) {
-			// todo: handle error state
-			console.error("Failed to get step explanation:", error);
-		}
-	};
-
-	const getEli5 = async (step: Step, concept: string) => {
-		try {
-			const response = await axios.post<{ data: Eli5MessageResponse }>(
-				`/api/assistants/threads/${thread?.id}/messages`,
-				{
-					stepTitle: step.title,
-					messageType: "eli5",
-					stepNumber: step.order,
-					concept,
-				}
-			);
-
-			// Update messages in thread
-			if (thread) {
-				const eli5Message: Eli5MessageResponse = response.data.data;
-				queryClient.setQueryData(["thread", thread.id], {
-					...thread,
-					messages: [...thread.messages, eli5Message],
-				});
-			}
-		} catch (error) {
-			//todo: implement error handling
-			console.error("Failed to get ELI5 explanation:", error);
-		}
-	};
-
-	const getDetailedExplanation = async (step: Step, concept: string) => {
-		try {
-			const response = await axios.post<{ data: DetailedExplanation }>(
-				`/api/assistants/threads/${thread?.id}/messages`,
-				{
-					stepTitle: step.title,
-					messageType: "detail",
-					stepNumber: step.order,
-					concept,
-				}
-			);
-
-			// Update messages in thread
-			if (thread) {
-				const detailMessage: DetailedExplanation = response.data.data;
-
-				queryClient.setQueryData(["thread", thread.id], {
-					...thread,
-					messages: [...thread.messages, detailMessage],
-				});
-			}
-		} catch (error) {
-			//todo: implement error handling
-			console.error("Failed to get detailed explanation:", error);
-		}
-	};
-
-	const getStepsList = async (topic: string) => {
-		if (!thread) return;
-
-		try {
-			const userMessage: ThreadMessage = {
-				role: "user",
-				type: "normal",
-				content: topic,
-			};
-			queryClient.setQueryData(["thread", thread.id], {
-				...thread,
-				messages: [
-					...thread.messages,
-					userMessage,
-					{
-						role: "assistant",
-						type: "normal",
-						content: "Procesando tu solicitud...",
-					},
-				],
-			});
-
-			const response = await axios.post<{ data: StepsListResponse }>(
-				`/api/assistants/threads/${thread.id}/messages`,
-				{
-					content: topic,
-					messageType: "list",
-				}
-			);
-
-			const stepsMessage: StepsListResponse = response.data.data;
-
-			queryClient.setQueryData(["thread", thread.id], {
-				...thread,
-				messages: [...thread.messages, userMessage, stepsMessage],
-			});
-		} catch (e) {
-			//todo: implement error handling
-			console.error("Failed to get steps list:", e);
-		}
-	};
+	}, [threadId, thread]);
 
 	return {
 		thread,
@@ -276,14 +271,16 @@ export function useThread() {
 		getEli5,
 		getDetailedExplanation,
 		getStepsList,
-		isLoading: (isLoadingExisting || mutation.isPending) && !thread,
-		error: mutation.error
+		isLoading: (isLoadingExisting || createThreadMutation.isPending) && !thread,
+		error: createThreadMutation.error
 			? {
 					message:
-						(mutation.error as any).response?.data?.message ||
+						(createThreadMutation.error as any).response?.data?.message ||
 						"Failed to create thread",
-					status: (mutation.error as any).response?.status,
+					status: (createThreadMutation.error as any).response?.status,
 			  }
 			: null,
+		isMessageLoading: postMessageMutation.isPending,
+		messageError: postMessageMutation.error,
 	};
 }
