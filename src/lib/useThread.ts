@@ -239,7 +239,15 @@ export function useThread() {
 			};
 			queryClient.setQueryData(["thread", thread.id], {
 				...thread,
-				messages: [...thread.messages, userMessage],
+				messages: [
+					...thread.messages,
+					userMessage,
+					{
+						role: "assistant",
+						type: "normal",
+						content: "Procesando tu solicitud...",
+					},
+				],
 			});
 
 			const response = await axios.post<{ data: StepsListResponse }>(
