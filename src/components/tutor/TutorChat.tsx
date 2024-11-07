@@ -25,6 +25,7 @@ const MessageComponent = {
 	list: ListMessage,
 	concept: ConceptMessage,
 	eli5: ConceptMessage,
+	detail: ConceptMessage,
 	// flashcard: FlashcardMessage,
 } as const;
 
@@ -308,6 +309,9 @@ export default function TutorChat() {
 						if (message.type === "eli5") {
 							//@ts-ignore
 							message.content.stepTitle = "Simplificación";
+						} else if (message.type === "detail") {
+							//@ts-ignore
+							message.content.stepTitle = "Detalles";
 						}
 
 						return (
