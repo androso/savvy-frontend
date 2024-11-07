@@ -11,8 +11,9 @@ import {
 	FlashcardMessageType,
 	ListTutorMessage,
 	NormalMessageType,
+	Step,
 } from "./types";
-import { useThread } from "../../lib/useThread";
+import { useThread } from "@/lib/useThread";
 import { axios } from "@/lib/utils";
 import FlashcardMessage from "./FlashcardMessage";
 import ListMessage from "./ListMessage";
@@ -27,15 +28,48 @@ const MessageComponent = {
 	// flashcard: FlashcardMessage,
 } as const;
 
-// TODO: If i reload, i would like to see the history of my thread.
-// right now this is getting saved, but the backend isn't returning the right structure
+interface StepActions {
+	eli5: boolean;
+	flashcard: boolean;
+	moreDetail: boolean;
+}
 
+// TODO: after a user clicks on a topic or writes the first message, ask the backend for a list of steps to understand the concept
+// TODO: start learning button should start the session, ask the backend for the explanation of the first step
+// TODO: render the first explanation, with three buttons (eli5, gen flash, expand) (three mutations)
+
+// TODO: Mutations:
+//			generateListOfSteps,
+// 			generateConceptExplanation(step) -- step has order and title
+// 	     Concept is the stept_title + explanation
+//			getEli5(concept),
+//			getFlashcard(concept)
+//   	    expandExplanation(concept)
 export default function TutorChat() {
 	const location = useLocation();
 	const { threadId } = useParams();
 	const course: Course = location.state?.course;
 	const navigate = useNavigate();
-	const { thread, isLoading, error } = useThread();
+	const { thread, isLoading, error, getStepsList } = useThread();
+	const [input, setInput] = useState("");
+	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
+	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
+		course?.course_id ? true : false
+	);
+
+	// messages state thread.messages
+	// steps state
+	const [steps, setSteps] = useState<Step[]>([]);
+	// currentStep state
+	const [currentStep, setCurrentStep] = useState<Step | null>(null);
+	// has the session started? state
+	const [sessionStarted, setSessionStarted] = useState(false);
+	// what actions have been used for the current step?
+	const [stepActions, setStepActions] = useState<StepActions>({
+		eli5: false,
+		flashcard: false,
+		moreDetail: false,
+	});
 
 	// Handle no course data
 	useEffect(() => {
@@ -43,12 +77,6 @@ export default function TutorChat() {
 			navigate("/");
 		}
 	}, [course, threadId]);
-
-	const [input, setInput] = useState("");
-	const { suggestedTopics } = useSuggestedTopics(course?.course_id);
-	const [showSuggestedTopics, setShowSuggestedTopics] = useState(
-		course?.course_id ? true : false
-	);
 
 	const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +93,7 @@ export default function TutorChat() {
 		scrollToBottom();
 	}, [thread?.messages]);
 
+	// shows suggested topics if there are no messages
 	useEffect(() => {
 		if (!thread?.messages?.[1]) {
 			setShowSuggestedTopics(true);
@@ -72,6 +101,19 @@ export default function TutorChat() {
 			setShowSuggestedTopics(false);
 		}
 	}, [thread]);
+
+	// todo: write a function that starts the session
+	// 		modifies the session state to started
+	// 		perform the mutation to get the first step explanation
+
+	// todo: write a function that gets the learning actions that haven't been used
+
+	// todo: write a function that handles when the user clicks on an action
+	// 		call mutation with the action type and the concept (step)
+
+	// todo: write a function that will handle the user clicking on "next step"
+	// 		make a call to the backend to get an explanation of the next step
+	// 		modify the session state to the next step
 
 	const handleSendMessage = async () => {
 		// if (!input.trim() || !thread) return;
@@ -126,44 +168,7 @@ export default function TutorChat() {
 	};
 
 	const handleTopicClick = async (topic: string) => {
-		topic;
-		// if (!thread) return;
-		// const isFirstMessage =
-		// 	messages.filter((m) => m.role === "user").length === 0;
-		// setMessages((prev) => [
-		// 	...prev,
-		// 	{
-		// 		role: "user",
-		// 		type: "normal",
-		// 		content: topic,
-		// 	},
-		// ]);
-		// try {
-		// 	if (isFirstMessage) {
-		// 		setMessages((prev) => [
-		// 			...prev,
-		// 			{
-		// 				role: "assistant",
-		// 				type: "normal",
-		// 				content: "Processing your request...",
-		// 			},
-		// 		]);
-		// 		const response = await axios.post(
-		// 			`/api/assistants/threads/${thread.id}/messages`,
-		// 			{
-		// 				content: topic,
-		// 				messageType: "list",
-		// 			}
-		// 		);
-		// 		setMessages((prev) => [
-		// 			...prev.filter((m) => m.content !== "Processing your request..."),
-		// 			response.data,
-		// 		]);
-		// 	}
-		// } catch (err) {
-		// 	console.error("Error processing topic:", err);
-		// }
-		// setShowSuggestedTopics(false);
+		await getStepsList(topic);
 	};
 
 	if (isLoading) {
