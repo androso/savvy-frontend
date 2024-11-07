@@ -52,6 +52,7 @@ export default function TutorChat() {
 		isLoading,
 		isMessageLoading,
 		error,
+		updateSession,
 		messageError,
 	} = useThread();
 
@@ -68,6 +69,22 @@ export default function TutorChat() {
 		flashcard: false,
 		moreDetail: false,
 	});
+
+	// sync initial state from metadata
+	useEffect(() => {
+		if (thread?.metadata) {
+			setSessionStarted(thread.metadata.sessionStarted || false);
+			setCurrentStep(thread.metadata.currentStep || null);
+			setSessionSteps(thread.metadata.sessionSteps || []);
+			setStepActions(
+				thread.metadata.stepActions || {
+					eli5: false,
+					flashcard: false,
+					moreDetail: false,
+				}
+			);
+		}
+	}, [thread?.metadata]);
 
 	// Scroll to bottom effect
 	useEffect(() => {
@@ -93,7 +110,7 @@ export default function TutorChat() {
 
 	// Session management functions
 	const startSession = async () => {
-		if (!sessionSteps.length || sessionStarted) return;
+		if (!sessionSteps.length || sessionStarted || !thread?.id) return;
 
 		setSessionStarted(true);
 		setCurrentStep(sessionSteps[0]);
@@ -103,7 +120,19 @@ export default function TutorChat() {
 				sessionSteps[0],
 				thread?.messages?.[1]?.content as string
 			);
-			setStepActions({ eli5: false, flashcard: false, moreDetail: false });
+			const newStepActions = {
+				eli5: false,
+				flashcard: false,
+				moreDetail: false,
+			};
+			setStepActions(newStepActions);
+			await updateSession({
+				threadId: thread.id,
+				sessionStarted: true,
+				currentStep: sessionSteps[0],
+				sessionSteps,
+				stepActions: newStepActions,
+			});
 		} catch (error) {
 			console.error("Failed to start session:", error);
 		}
@@ -130,28 +159,48 @@ export default function TutorChat() {
 					break;
 				// Add flashcard case when implemented
 			}
+			const newStepActions = { ...stepActions, [action]: true };
+			setStepActions(newStepActions);
 
-			setStepActions((prev) => ({ ...prev, [action]: true }));
+			await updateSession({
+				threadId: thread.id,
+				sessionStarted,
+				currentStep,
+				sessionSteps,
+				stepActions: newStepActions,
+			});
 		} catch (error) {
 			console.error(`Failed to execute ${action}:`, error);
 		}
 	};
 
 	const handleNextStep = async () => {
-		if (!currentStep || !sessionSteps.length) return;
+		if (!currentStep || !sessionSteps.length || !thread?.id) return;
 
 		const nextStepIndex =
 			sessionSteps.findIndex((step) => step.order === currentStep.order) + 1;
 		if (nextStepIndex < sessionSteps.length) {
 			const nextStep = sessionSteps[nextStepIndex];
 			setCurrentStep(nextStep);
-			setStepActions({ eli5: false, flashcard: false, moreDetail: false });
+			const newStepActions = {
+				eli5: false,
+				flashcard: false,
+				moreDetail: false,
+			};
+			setStepActions(newStepActions);
 
 			try {
 				await getStepExplanation(
 					nextStep,
 					thread?.messages?.[1]?.content as string
 				);
+				await updateSession({
+					threadId: thread.id,
+					sessionStarted,
+					currentStep: nextStep,
+					sessionSteps,
+					stepActions: newStepActions,
+				});
 			} catch (error) {
 				console.error("Failed to get next step explanation:", error);
 			}
@@ -168,6 +217,15 @@ export default function TutorChat() {
 			) {
 				setSessionSteps(message.content.steps);
 				setShowSuggestedTopics(false);
+				if (thread?.id) {
+					await updateSession({
+						threadId: thread.id,
+						sessionStarted,
+						currentStep,
+						sessionSteps: message.content.steps,
+						stepActions,
+					});
+				}
 			}
 		} catch (error) {
 			console.error("Failed to get steps list:", error);
