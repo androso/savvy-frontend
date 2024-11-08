@@ -3,20 +3,22 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 
-export default function FlashcardMessage({
-	question,
-	options,
-	correctOption,
-}: {
+interface FlashcardContent {
 	question: string;
 	options: string[];
 	correctOption: string;
+}
+
+export default function FlashcardMessage({
+	content,
+}: {
+	content: FlashcardContent;
 }) {
 	const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 	const [isRevealed, setIsRevealed] = useState<boolean>(false);
 
 	const handleOptionClick = (option: string) => {
-		if (option === correctOption) {
+		if (option === content.correctOption) {
 			setIsRevealed(true);
 		} else {
 			setIsRevealed(false);
@@ -29,11 +31,11 @@ export default function FlashcardMessage({
 			<div className="p-6">
 				<CardHeader className="pb-4">
 					<CardTitle className="text-center text-xl font-bold text-gray-800 px-4">
-						{question}
+						{content.question}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-3">
-					{options.map((option, index) => (
+					{content.options?.map((option, index) => (
 						<Button
 							key={index}
 							variant="outline"
@@ -41,14 +43,14 @@ export default function FlashcardMessage({
 								(isRevealed || selectedOptions.includes(option)) &&
 								"pointer-events-none"
 							} border-gray-200 hover:bg-blue-100 ${
-								isRevealed && option === correctOption
+								isRevealed && option === content.correctOption
 									? "bg-green-300"
 									: selectedOptions.includes(option)
 									? "bg-red-300"
 									: " "
 							}`}
 							onClick={() => handleOptionClick(option)}
-							disabled={isRevealed ? option !== correctOption : false}
+							disabled={isRevealed ? option !== content.correctOption : false}
 						>
 							{option}
 						</Button>
