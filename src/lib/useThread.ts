@@ -10,6 +10,7 @@ import {
 import { ListContent } from "@/components/tutor/ListMessage";
 import { SessionUpdateRequest, Step } from "@/components/tutor/types";
 import { ConceptContent } from "@/components/tutor/ConceptMessage";
+import { get } from "http";
 
 // Types for API responses
 interface ThreadResponse {
@@ -88,6 +89,12 @@ type MessageRequest =
 			stepTitle: string;
 			stepNumber: number;
 			concept: string;
+	  }
+	| {
+			messageType: "flashcard";
+			stepTitle: string;
+			stepNumber: number;
+			concept: string;
 	  };
 
 type ThreadMessageRequest = MessageRequest & { threadId: string };
@@ -140,7 +147,7 @@ const api = {
 			`/api/assistants/threads/${threadId}/messages`,
 			request
 		);
-		
+
 		return response.data.data;
 	},
 
@@ -263,6 +270,18 @@ export function useThread() {
 		});
 	};
 
+	const getFlashcard = async (step: Step, concept: string) => {
+		if (!thread?.id) return;
+
+		return postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "flashcard",
+			stepTitle: step.title,
+			stepNumber: step.order,
+			concept,
+		});
+	};
+
 	const getEli5 = async (step: Step, concept: string) => {
 		if (!thread?.id) return;
 
@@ -327,5 +346,6 @@ export function useThread() {
 		isMessageLoading: postMessageMutation.isPending,
 		messageError: postMessageMutation.error,
 		updateSession: updateSessionMutation.mutateAsync,
+		getFlashcard,
 	};
 }
