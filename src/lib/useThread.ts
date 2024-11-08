@@ -71,6 +71,7 @@ type Thread = {
 
 type MessageRequest =
 	| { messageType: "list"; topic: string }
+	| { messageType: "normal"; content: string }
 	| {
 			messageType: "concept";
 			stepTitle: string;
@@ -272,6 +273,12 @@ export function useThread() {
 	const getFlashcard = async (step: Step, concept: string) => {
 		if (!thread?.id) return;
 
+		await postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "normal",
+			content: "Genera una tarjeta de estudio",
+		});
+
 		return postMessageMutation.mutateAsync({
 			threadId: thread.id,
 			messageType: "flashcard",
@@ -284,6 +291,12 @@ export function useThread() {
 	const getEli5 = async (step: Step, concept: string) => {
 		if (!thread?.id) return;
 
+		await postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "normal",
+			content: "Simplifica",
+		});
+
 		return postMessageMutation.mutateAsync({
 			threadId: thread.id,
 			messageType: "eli5",
@@ -295,6 +308,12 @@ export function useThread() {
 
 	const getDetailedExplanation = async (step: Step, concept: string) => {
 		if (!thread?.id) return;
+
+		await postMessageMutation.mutateAsync({
+			threadId: thread.id,
+			messageType: "normal",
+			content: "Expande",
+		});
 
 		return postMessageMutation.mutateAsync({
 			threadId: thread.id,
