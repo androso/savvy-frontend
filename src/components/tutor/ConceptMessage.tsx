@@ -12,7 +12,7 @@ export default function ConceptMessage({
 	content: ConceptContent;
 }) {
 	return (
-		<Card className="p-6 bg-white shadow-sm">
+		<Card className="p-6 bg-white shadow-sm mb-4">
 			<div className="flex items-start mb-4">
 				<div className="flex-shrink-0 w-8 h-8 mr-3 bg-blue-100 rounded-lg flex items-center justify-center">
 					<span className="text-blue-600 font-semibold text-lg">

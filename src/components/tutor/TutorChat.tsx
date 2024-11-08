@@ -364,10 +364,10 @@ export default function TutorChat() {
 									className="mr-2"
 								>
 									{action === "eli5"
-										? "Explain Like I'm 5"
+										? "Simplificar"
 										: action === "flashcard"
-										? "Generate Flashcard"
-										: "More Detail"}
+										? "Generar Flashcard"
+										: "Expandir Detalles"}
 								</Button>
 							))}
 
@@ -395,36 +395,18 @@ export default function TutorChat() {
 			{/* Input Box */}
 			<div className="fixed bottom-[69px] bg-white p-4 shadow-md w-full max-w-2xl mx-auto">
 				<div className="flex items-center">
-					<label htmlFor="file-upload" className="mr-2">
-						<Button
-							variant="outline"
-							size="icon"
-							className="cursor-pointer"
-							tabIndex={0}
-							role="button"
-							aria-label="Attach file"
-						>
-							<PaperclipIcon className="h-4 w-4" />
-						</Button>
-					</label>
-					<Input
-						id="file-upload"
-						type="file"
-						className="hidden"
-						aria-label="File upload"
-					/>
 					<Input
 						placeholder="Enter a question or topic"
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
 						className="flex-1"
-						disabled={isMessageLoading}
+						disabled={isMessageLoading || sessionStarted}
 					/>
 					<Button
 						onClick={handleSendMessage}
 						className="ml-2"
-						disabled={isMessageLoading}
+						disabled={isMessageLoading || sessionStarted}
 					>
 						<ArrowUpIcon className="h-4 w-4" />
 					</Button>

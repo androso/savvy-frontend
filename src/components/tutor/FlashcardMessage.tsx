@@ -1,4 +1,4 @@
-import { Book, CircleX, Download } from "lucide-react";
+import { Book, Download } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
@@ -27,7 +27,7 @@ export default function FlashcardMessage({
 	};
 
 	return (
-		<Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
+		<Card className="w-full max-w-2xl mx-auto bg-white shadow-lg mb-4">
 			<div className="p-6">
 				<CardHeader className="pb-4">
 					<CardTitle className="text-center text-xl font-bold text-gray-800 px-4">
