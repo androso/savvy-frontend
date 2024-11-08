@@ -116,11 +116,12 @@ const parseThreadMetadata = (metadata: ThreadMetadata) => {
 };
 // API functions
 const api = {
-	createThread: async (courseName: string) => {
+	createThread: async (courseName: string, courseId: string) => {
 		const response = await axios.post<ThreadResponse>(
 			"/api/assistants/threads",
 			{
 				course_name: courseName,
+				course_id: courseId,
 			}
 		);
 		return response.data.data;
@@ -171,6 +172,8 @@ export function useThread() {
 
 	const courseName =
 		location.state?.course?.course_name ?? searchParams.get("course_name");
+	const courseId =
+		location.state?.course?.course_id ?? searchParams.get("course_id");
 
 	// Query to fetch existing thread
 	const { data: thread, isLoading: isLoadingExisting } = useQuery({
@@ -182,7 +185,7 @@ export function useThread() {
 
 	// Mutation to create new thread
 	const createThreadMutation = useMutation({
-		mutationFn: () => api.createThread(courseName ?? ""),
+		mutationFn: () => api.createThread(courseName ?? "", courseId ?? ""),
 		onSuccess: (newThread) => {
 			if (newThread?.id) {
 				if (newThread?.metadata) {
