@@ -10,7 +10,6 @@ import {
 import { ListContent } from "@/components/tutor/ListMessage";
 import { SessionUpdateRequest, Step } from "@/components/tutor/types";
 import { ConceptContent } from "@/components/tutor/ConceptMessage";
-import { get } from "http";
 
 // Types for API responses
 interface ThreadResponse {

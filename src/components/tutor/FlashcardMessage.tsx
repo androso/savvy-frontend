@@ -39,7 +39,7 @@ export default function FlashcardMessage({
 						<Button
 							key={index}
 							variant="outline"
-							className={`w-full justify-center h-auto py-4 px-6 text-center text-gray-700 bg-blue-50 ${
+							className={`w-full justify-center min-h-[4rem] py-3 px-4 text-center text-gray-700 bg-blue-50 whitespace-normal break-words ${
 								(isRevealed || selectedOptions.includes(option)) &&
 								"pointer-events-none"
 							} border-gray-200 hover:bg-blue-100 ${
@@ -52,13 +52,14 @@ export default function FlashcardMessage({
 							onClick={() => handleOptionClick(option)}
 							disabled={isRevealed ? option !== content.correctOption : false}
 						>
-							{option}
+							<span className="text-sm leading-tight">{option}</span>
 						</Button>
 					))}
 					<div className="flex justify-center space-x-4 mt-2">
 						<Button
 							variant="outline"
 							className="w-full py-3 bg-blue-50 hover:bg-green-300 border-gray-200"
+							onClick={() => {}}
 						>
 							<Download className="mr-2 h-5 w-5" /> Save
 						</Button>
@@ -69,12 +70,6 @@ export default function FlashcardMessage({
 							onClick={() => setIsRevealed(true)}
 						>
 							<Book className="mr-2 h-5 w-5" /> Reveal
-						</Button>
-						<Button
-							variant="outline"
-							className="w-full py-3 bg-blue-50 hover:bg-red-400 border-gray-200"
-						>
-							<CircleX className="mr-2 h-5 w-5" /> Discard
 						</Button>
 					</div>
 				</CardContent>
