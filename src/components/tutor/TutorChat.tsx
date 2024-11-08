@@ -18,7 +18,7 @@ import FlashcardMessage from "./FlashcardMessage";
 import ListMessage from "./ListMessage";
 import NormalMessage from "./NormalMessage";
 import LoadingSpinner from "../LoadingSpinner";
-import ConceptMessage from "./ConceptMessage";
+import ConceptMessage, { ConceptContent } from "./ConceptMessage";
 
 const MessageComponent = {
 	normal: NormalMessage,
@@ -26,7 +26,7 @@ const MessageComponent = {
 	concept: ConceptMessage,
 	eli5: ConceptMessage,
 	detail: ConceptMessage,
-	// flashcard: FlashcardMessage,
+	flashcard: FlashcardMessage,
 } as const;
 
 interface StepActions {
@@ -35,10 +35,8 @@ interface StepActions {
 	moreDetail: boolean;
 }
 
-// TODO: now make generate flashcard and more detail work
 // TODO: apparently we can't store a lot of info in metadata at openai
 // TODO: it's returning an error saying that the steps are too long.
-// why not make it work for now and then we can think about how to store the steps
 export default function TutorChat() {
 	const location = useLocation();
 	const { threadId } = useParams();
@@ -60,6 +58,7 @@ export default function TutorChat() {
 		error,
 		updateSession,
 		messageError,
+		getFlashcard,
 	} = useThread();
 
 	// Local state
@@ -69,6 +68,7 @@ export default function TutorChat() {
 	);
 	const [sessionSteps, setSessionSteps] = useState<Step[]>([]);
 	const [currentStep, setCurrentStep] = useState<Step | null>(null);
+	const [currentConcept, setCurrentConcept] = useState<string | null>(null);
 	const [sessionStarted, setSessionStarted] = useState(false);
 	const [stepActions, setStepActions] = useState<StepActions>({
 		eli5: false,
@@ -122,7 +122,7 @@ export default function TutorChat() {
 		setCurrentStep(sessionSteps[0]);
 
 		try {
-			await getStepExplanation(
+			let explanation = await getStepExplanation(
 				sessionSteps[0],
 				thread?.messages?.[1]?.content as string
 			);
@@ -131,6 +131,12 @@ export default function TutorChat() {
 				flashcard: false,
 				moreDetail: false,
 			};
+
+			if (explanation?.content && typeof explanation?.content !== "string") {
+				let concept = explanation.content as ConceptContent;
+				setCurrentConcept(concept.explanation);
+			}
+
 			setStepActions(newStepActions);
 			await updateSession({
 				threadId: thread.id,
@@ -158,12 +164,17 @@ export default function TutorChat() {
 		try {
 			switch (action) {
 				case "eli5":
-					await getEli5(currentStep, currentStep.title);
+					await getEli5(currentStep, currentConcept || currentStep.title);
 					break;
 				case "moreDetail":
-					await getDetailedExplanation(currentStep, currentStep.title);
+					await getDetailedExplanation(
+						currentStep,
+						currentConcept || currentStep.title
+					);
 					break;
-				// Add flashcard case when implemented
+				case "flashcard":
+					await getFlashcard(currentStep, currentConcept || currentStep.title);
+					break;
 			}
 			const newStepActions = { ...stepActions, [action]: true };
 			setStepActions(newStepActions);
@@ -196,10 +207,16 @@ export default function TutorChat() {
 			setStepActions(newStepActions);
 
 			try {
-				await getStepExplanation(
+				let explanation = await getStepExplanation(
 					nextStep,
 					thread?.messages?.[1]?.content as string
 				);
+				console.log({ explanation });
+				if (explanation?.content && typeof explanation?.content !== "string") {
+					let concept = explanation.content as ConceptContent;
+					setCurrentConcept(concept.explanation);
+				}
+
 				await updateSession({
 					threadId: thread.id,
 					sessionStarted,
