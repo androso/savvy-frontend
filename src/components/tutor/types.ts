@@ -38,3 +38,15 @@ export interface FlashcardMessageType extends BaseTutorMessage {
         correctOption: string;
     };
 }
+
+export interface SessionUpdateRequest {
+  threadId: string;
+  sessionStarted: boolean;
+  currentStep: Step | null;
+  sessionSteps: Step[];
+  stepActions: {
+    eli5: boolean;
+    flashcard: boolean;
+    moreDetail: boolean;
+  };
+}

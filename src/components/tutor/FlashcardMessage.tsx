@@ -1,22 +1,26 @@
-import { Book, CircleX, Download } from "lucide-react";
+import { Book, Download } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 
-export default function FlashcardMessage({
-	question,
-	options,
-	correctOption,
-}: {
+export interface FlashcardContent {
 	question: string;
 	options: string[];
 	correctOption: string;
+}
+
+export default function FlashcardMessage({
+	content,
+	saveFlashcard,
+}: {
+	content: FlashcardContent;
+	saveFlashcard: (content: FlashcardContent) => void;
 }) {
 	const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 	const [isRevealed, setIsRevealed] = useState<boolean>(false);
 
 	const handleOptionClick = (option: string) => {
-		if (option === correctOption) {
+		if (option === content.correctOption) {
 			setIsRevealed(true);
 		} else {
 			setIsRevealed(false);
@@ -25,40 +29,45 @@ export default function FlashcardMessage({
 	};
 
 	return (
-		<Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
+		<Card className="w-full max-w-2xl mx-auto bg-white shadow-lg mb-4">
 			<div className="p-6">
 				<CardHeader className="pb-4">
 					<CardTitle className="text-center text-xl font-bold text-gray-800 px-4">
-						{question}
+						{content.question}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-3">
-					{options.map((option, index) => (
+					{content.options?.map((option, index) => (
 						<Button
 							key={index}
 							variant="outline"
-							className={`w-full justify-center h-auto py-4 px-6 text-center text-gray-700 bg-blue-50 ${
+							className={`w-full justify-center min-h-[4rem] py-3 px-4 text-center text-gray-700 bg-blue-50 whitespace-normal break-words ${
 								(isRevealed || selectedOptions.includes(option)) &&
 								"pointer-events-none"
 							} border-gray-200 hover:bg-blue-100 ${
-								isRevealed && option === correctOption
+								isRevealed && option === content.correctOption
 									? "bg-green-300"
 									: selectedOptions.includes(option)
 									? "bg-red-300"
 									: " "
 							}`}
 							onClick={() => handleOptionClick(option)}
-							disabled={isRevealed ? option !== correctOption : false}
+							disabled={isRevealed ? option !== content.correctOption : false}
 						>
-							{option}
+							<span className="text-sm leading-tight">{option}</span>
 						</Button>
 					))}
 					<div className="flex justify-center space-x-4 mt-2">
 						<Button
 							variant="outline"
 							className="w-full py-3 bg-blue-50 hover:bg-green-300 border-gray-200"
+							onClick={() => {}}
 						>
-							<Download className="mr-2 h-5 w-5" /> Save
+							<Download
+								onClick={() => saveFlashcard(content)}
+								className="mr-2 h-5 w-5"
+							/>{" "}
+							Save
 						</Button>
 						<Button
 							variant="outline"
@@ -67,12 +76,6 @@ export default function FlashcardMessage({
 							onClick={() => setIsRevealed(true)}
 						>
 							<Book className="mr-2 h-5 w-5" /> Reveal
-						</Button>
-						<Button
-							variant="outline"
-							className="w-full py-3 bg-blue-50 hover:bg-red-400 border-gray-200"
-						>
-							<CircleX className="mr-2 h-5 w-5" /> Discard
 						</Button>
 					</div>
 				</CardContent>
