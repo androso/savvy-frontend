@@ -14,7 +14,7 @@ import {
 	Step,
 } from "./types";
 import { useThread } from "@/lib/useThread";
-import FlashcardMessage from "./FlashcardMessage";
+import FlashcardMessage, { FlashcardContent } from "./FlashcardMessage";
 import ListMessage from "./ListMessage";
 import NormalMessage from "./NormalMessage";
 import LoadingSpinner from "../LoadingSpinner";
@@ -255,6 +255,19 @@ export default function TutorChat() {
 		}
 	};
 
+	const saveFlashcard = async (flashcard: FlashcardContent) => {
+		if (!thread?.id) return;
+
+		try {
+			// TODO:
+			// call the api to save the flashcard
+			// disable the "save" button in the current flashcard
+			// show success mesage in case everything goes right
+		} catch (error) {
+			console.error("Failed to save flashcard:", error);
+		}
+	}
+
 	const handleSendMessage = async () => {
 		if (!input.trim() || !thread) return;
 
@@ -336,6 +349,7 @@ export default function TutorChat() {
 								key={index}
 								role={message.role}
 								content={message.content as any}
+								saveFlashcard={saveFlashcard}
 							/>
 						);
 					})}

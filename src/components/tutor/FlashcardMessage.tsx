@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
 
-interface FlashcardContent {
+export interface FlashcardContent {
 	question: string;
 	options: string[];
 	correctOption: string;
@@ -11,8 +11,10 @@ interface FlashcardContent {
 
 export default function FlashcardMessage({
 	content,
+	saveFlashcard,
 }: {
 	content: FlashcardContent;
+	saveFlashcard: (content: FlashcardContent) => void;
 }) {
 	const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 	const [isRevealed, setIsRevealed] = useState<boolean>(false);
@@ -61,7 +63,11 @@ export default function FlashcardMessage({
 							className="w-full py-3 bg-blue-50 hover:bg-green-300 border-gray-200"
 							onClick={() => {}}
 						>
-							<Download className="mr-2 h-5 w-5" /> Save
+							<Download
+								onClick={() => saveFlashcard(content)}
+								className="mr-2 h-5 w-5"
+							/>{" "}
+							Save
 						</Button>
 						<Button
 							variant="outline"
